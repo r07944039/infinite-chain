@@ -53,17 +53,26 @@ class Node():
         return error, result
 
     def getBlockHash(self, block_height):
-        error = 0
-        result = blocks[block_height].block_hash
+        if block_height != NULL:
+            result = self.blocks[block_height].block_hash
+            error = 0
+        else:
+            result = 0
+            error = 1
 
         return result
 
+    # 目前我只想得到 O(n) 直接去暴力搜那個 hash 在哪裡 QQ
     def getBlockHeader(self, block_hash):
-        error = 0
-        result = block_header
-
-        return result
-
+        for block in self.blocks:
+            if block.block_hash == block_hash:
+                error = 0
+                result = block.block_header
+                return error, result
+        
+        error = 1
+        result = 0
+        return error, result      
 
 def connectSocket():
     f = open("config.json", 'r')
@@ -85,6 +94,6 @@ if __name__ == '__main__':
         2. 若是沒有，就自己新增一個 Genesis block
         3. 若是有，就去要到最新(長)的 block -> prev_block
     '''
-    
+
     node = Node()
     connectSocket()
