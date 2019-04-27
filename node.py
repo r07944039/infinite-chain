@@ -15,6 +15,11 @@ def sha256(data):
 
 
 class Node():
+    def __init__(self):
+        # Genesis block
+        block = Block('0000000000000000000000000000000000000000000000000000000000000000', '0001000000000000000000000000000000000000000000000000000000000000', 2321)
+        self.blocks = [block]
+        self.height = 0
 
     # node
     def mining(self, version, prev_block, merkle_root, target):
@@ -49,11 +54,11 @@ class Node():
 
     def getBlockHash(self, block_height):
         error = 0
-        result = ""
+        result = blocks[block_height].block_hash
 
         return result
 
-    def getBlockHeader(self):
+    def getBlockHeader(self, block_hash):
         error = 0
         result = block_header
 
@@ -72,19 +77,7 @@ def connectSocket():
     NEIGHBOR_LIST = data['neighbor_list']
     TARGET = data['target']
 
-    # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    #     s.bind((HOST, PORT))
-    #     s.listen()
-    #     conn, addr = s.accept()
-    #     with conn:
-    #         print('Connected by', addr)
-    #         while True:
-    #             data = conn.recv(1024)
-    #             if not data:
-    #                 break
-    #             conn.sendall(data)
-
-
+    os.system('python3 socket/app-server.py {} {}'.format(HOST, P2P_PORT))
 
 if __name__ == '__main__':
     '''
@@ -93,7 +86,5 @@ if __name__ == '__main__':
         3. 若是有，就去要到最新(長)的 block -> prev_block
     '''
     
-    connectSocket()
-
-    block = Block('0000000000000000000000000000000000000000000000000000000000000000', '0001000000000000000000000000000000000000000000000000000000000000', 2321, 0)
     node = Node()
+    connectSocket()
