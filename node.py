@@ -54,6 +54,7 @@ class Node():
 
     def getBlockHash(self, block_height):
         if block_height != NULL:
+            # os.system('python3 socket/app-client.py {} {}'.format(HOST, P2P_PORT))
             result = self.blocks[block_height].block_hash
             error = 0
         else:
@@ -80,6 +81,10 @@ def connectSocket():
     f.close()
     # print(data)
 
+    global HOST
+    global P2P_PORT
+    global USER_PORT
+    global NEIGHBOR_LIST
     HOST = '127.0.0.1'
     P2P_PORT = data['p2p_port']
     USER_PORT = data['user_port']
@@ -93,6 +98,8 @@ if __name__ == '__main__':
         1. 先確認 network 中有沒有已經存在的 blockchain
         2. 若是沒有，就自己新增一個 Genesis block
         3. 若是有，就去要到最新(長)的 block -> prev_block
+        4. 開啟自己的 socket server
+        5. 開始 mining
     '''
 
     node = Node()

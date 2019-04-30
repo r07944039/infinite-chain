@@ -4,25 +4,35 @@ import sys
 import socket
 import selectors
 import traceback
+import json
 
 import libclient
 
 sel = selectors.DefaultSelector()
 
 
+def load_json(query):
+    q = json.loads(query)
+    # print(q)
+    method = q["method"]
+    value = q["data"]
+    # print(method, value)
+
+    return method, value
+
 # TODO
-def create_request(action, value):
-    if action == "search":
+def create_request(method, value):
+    if method == "getBlockHash":
         return dict(
             type="text/json",
             encoding="utf-8",
-            content=dict(action=action, value=value),
+            content=dict(method=method, value=value),
         )
     else:
         return dict(
             type="binary/custom-client-binary-type",
             encoding="binary",
-            content=bytes(action + value, encoding="utf-8"),
+            content=bytes(method + value, encoding="utf-8"),
         )
 
 
@@ -37,13 +47,16 @@ def start_connection(host, port, request):
     sel.register(sock, events, data=message)
 
 
-if len(sys.argv) != 5:
-    print("usage:", sys.argv[0], "<host> <port> <action> <value>")
+if len(sys.argv) != 4:
+    print("usage:", sys.argv[0], "<host> <port> <json_request>")
     sys.exit(1)
 
+print((sys.argv))
 host, port = sys.argv[1], int(sys.argv[2])
-action, value = sys.argv[3], sys.argv[4]
-request = create_request(action, value)
+query = sys.argv[3]
+# method, value = sys.argv[3], sys.argv[4]
+method, value = load_json(query)
+request = create_request(method, value)
 start_connection(host, port, request)
 
 try:
