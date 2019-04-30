@@ -11,6 +11,7 @@ def sha256(data):
 
 class Block_header():
     def __init__(self, prev_block, target, nonce):
+        # 作業中的 version 和 merkle_root 為固定的
         self.version = "00000001"
         self.prev_block = prev_block
         self.merkle_root = "0000000000000000000000000000000000000000000000000000000000000000"

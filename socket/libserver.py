@@ -50,7 +50,7 @@ class Message:
 
     def _write(self):
         if self._send_buffer:
-            print("sending", repr(self._send_buffer), "to", self.addr)
+            print("sending \n", repr(self._send_buffer), "\nto", self.addr)
             try:
                 # Should be ready to write
                 sent = self.sock.send(self._send_buffer)
@@ -88,20 +88,39 @@ class Message:
         message = message_hdr + jsonheader_bytes + content_bytes
         return message
 
+    # TODO: 修改成成呼叫我們 API 的格式
+    # TODO: 要如何安排 socket 和 API 之間的呼叫
     def _create_response_json_content(self):
-        action = self.request.get("action")
-        if action == "search":
-            query = self.request.get("value")
-            answer = request_search.get(query) or f'No match for "{query}".'
-            content = {"result": answer}
+        method = self.request.get("method")
+        query = self.request.get("value")
+        error = 0
+        print(method, query)
+        if method == "sendHeader":
+            result = "ok!"
+            
+        # elif method == "getBlocks":
+        # elif method == "getBlockCount":
+        # elif method == "getBlockHash":
+        # elif method == "getBlockHeader":
         else:
-            content = {"result": f'Error: invalid action "{action}".'}
+            error = 1
+            result = f'Error: invalid method "{method}".'
+
+        content = {"error": error, "result": result}
+
+        # if method == "search":
+        #     query = self.request.get("value")
+        #     answer = request_search.get(query) or f'No match for "{query}".'
+        #     content = {"result": answer}
+        # else:
+        #     content = {"result": f'Error: invalid method "{method}".'}
         content_encoding = "utf-8"
         response = {
             "content_bytes": self._json_encode(content, content_encoding),
             "content_type": "text/json",
             "content_encoding": content_encoding,
         }
+        print(response)
         return response
 
     def _create_response_binary_content(self):
@@ -194,7 +213,7 @@ class Message:
         if self.jsonheader["content-type"] == "text/json":
             encoding = self.jsonheader["content-encoding"]
             self.request = self._json_decode(data, encoding)
-            print("received request", repr(self.request), "from", self.addr)
+            print("received request: \n", repr(self.request), "\nfrom ", self.addr)
         else:
             # Binary or unknown content-type
             self.request = data

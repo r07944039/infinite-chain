@@ -20,20 +20,19 @@ def load_json(query):
 
     return method, value
 
-# TODO
 def create_request(method, value):
-    if method == "getBlockHash":
-        return dict(
-            type="text/json",
-            encoding="utf-8",
-            content=dict(method=method, value=value),
-        )
-    else:
-        return dict(
-            type="binary/custom-client-binary-type",
-            encoding="binary",
-            content=bytes(method + value, encoding="utf-8"),
-        )
+    # if method is not None:
+    return dict(
+        type="text/json",
+        encoding="utf-8",
+        content=dict(method=method, value=value),
+    )
+    # else:
+    #     return dict(
+    #         type="binary/custom-client-binary-type",
+    #         encoding="binary",
+    #         content=bytes(method + value, encoding="utf-8"),
+    #     )
 
 
 def start_connection(host, port, request):
