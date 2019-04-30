@@ -18,19 +18,13 @@ class Node():
     def __init__(self):
         # Genesis block
         block = Block('0000000000000000000000000000000000000000000000000000000000000000', '0001000000000000000000000000000000000000000000000000000000000000', 2321)
-        self.blocks = [block]
+        self.chain = []
+        self.chain.append(block)
         self.height = 0
 
-    # node
-    def mining(self, version, prev_block, merkle_root, target):
-        pre_string = version + prev_block + merkle_root + target
-        nonce = hex(os.urandom(random.randint(0, 2**32)))[2:]
-        mine = pre_string + nonce
-        while sha256(mine) > target:
-            nonce = hex(os.urandom(random.randint(0, 2**32)))[2:]
-            mine = pre_string + nonce
-
-        return nonce
+    def _add_new_block(self, block):
+        self.chain.append(block)
+        self.height += 1
 
     # p2p_port
     def sendHeader(self, block_hash, block_header, block_height):
@@ -45,17 +39,40 @@ class Node():
 
         return error, result
 
+    # node
+    def mining(self, block):
+        header = block.block_header
+        pre_string = header.version + header.prev_block + header.merkle_root + header.target
+        nonce = hex(os.urandom(random.randint(0, 2**32)))[2:]
+        mine = pre_string + nonce
+        while sha256(mine) > header.target:
+            nonce = hex(os.urandom(random.randint(0, 2**32)))[2:]
+            mine = pre_string + nonce
+        
+        # Add block into your block chain
+        new_block = Block(block.block_hash, header.target, nonce)
+        _add_new_block(new_block)
+
+        # Boardcast new block to network
+        sendHeader(new_block.block_hash, new_block.block_header, self.height)
+
+        return nonce
+
     # user_port
     def getBlockCount(self):
-        error = 0
-        result = ""
+        if self == None:
+            error = 1
+            result = 0
+        else:
+            error = 0
+            result = self.height
 
         return error, result
 
     def getBlockHash(self, block_height):
-        if block_height != NULL:
+        if block_height != None:
             # os.system('python3 socket/app-client.py {} {}'.format(HOST, P2P_PORT))
-            result = self.blocks[block_height].block_hash
+            result = self.chain[block_height].block_hash
             error = 0
         else:
             result = 0
@@ -65,7 +82,7 @@ class Node():
 
     # 目前我只想得到 O(n) 直接去暴力搜那個 hash 在哪裡 QQ
     def getBlockHeader(self, block_hash):
-        for block in self.blocks:
+        for block in self.chain:
             if block.block_hash == block_hash:
                 error = 0
                 result = block.block_header
