@@ -4,6 +4,9 @@
 - Node
     - blocks: 會存一陣列為 blocks，為目前此 node 挖到最長的 chain
     - height: 這個 blocks 有多長
+    - socket 部分:
+      - P2P port: 給別人來問問題 or 自己問問題 (?)
+      - user port: 自己去傳送 block 的狀態
 - Block
     - version
     - prev_block
