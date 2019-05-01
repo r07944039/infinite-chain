@@ -17,6 +17,7 @@ class Miner:
         store.node.chain.append(block)
         store.node.height += 1
         
+    # TODO: 目前 run 起來會壞掉
     def mining(self):
         height = store.node.height
         block = store.node.chain[height]
