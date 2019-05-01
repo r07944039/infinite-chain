@@ -11,8 +11,7 @@ def sha256(data):
     return m.hexdigest()
 
 class Miner:
-    def __init__(self):
-        print(store.node)
+    # def __init__(self):
 
     def _add_new_block(self, block):
         store.node.chain.append(block)
