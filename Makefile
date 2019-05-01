@@ -4,9 +4,18 @@ all: help
 run:
 	python3 main.py
 
-## Ping the server
-ping: 
+## Ping 1234
+p1: 
 	python3 socket/app-client.py 127.0.0.1 1234 '{"method":"sendHeader","data":"bbb"}'
+
+## Ping 2345
+p2:
+	python3 socket/app-client.py 127.0.0.1 2345 '{"method":"sendHeader","data":"bbb"}'
+
+## Ping 1234 then 2345
+ping:
+	python3 socket/app-client.py 127.0.0.1 1234 '{"method":"sendHeader","data":"bbb"}'
+	python3 socket/app-client.py 127.0.0.1 2345 '{"method":"sendHeader","data":"bbb"}'
 
 #########
 # Help ##
