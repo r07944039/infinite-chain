@@ -3,6 +3,7 @@ import selectors
 import json
 import io
 import struct
+from termcolor import colored, cprint
 
 request_search = {
     "morpheus": "Follow the white rabbit. \U0001f430",
@@ -50,7 +51,8 @@ class Message:
 
     def _write(self):
         if self._send_buffer:
-            print("sending \n", repr(self._send_buffer), "\nto", self.addr)
+            print("sending to ", self.addr)
+            # print("sending \n", repr(self._send_buffer), "\nto", self.addr)
             try:
                 # Should be ready to write
                 sent = self.sock.send(self._send_buffer)
@@ -94,7 +96,7 @@ class Message:
         method = self.request.get("method")
         query = self.request.get("value")
         error = 0
-        print(method, query)
+        # print(method, query)
         if method == "sendHeader":
             result = "ok!"
             
@@ -120,7 +122,7 @@ class Message:
             "content_type": "text/json",
             "content_encoding": content_encoding,
         }
-        print(response)
+        # print(response)
         return response
 
     def _create_response_binary_content(self):
@@ -160,7 +162,7 @@ class Message:
         self._write()
 
     def close(self):
-        print("closing connection to", self.addr)
+        cprint("closing connection to {}".format(self.addr), 'red', attrs=['bold'])
         try:
             self.selector.unregister(self.sock)
         except Exception as e:
