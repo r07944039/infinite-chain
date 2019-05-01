@@ -40,7 +40,7 @@ class Node():
         return error, result
 
     # node
-    def mining(self, block):
+    def _mining(self, block):
         header = block.block_header
         pre_string = header.version + header.prev_block + header.merkle_root + header.target
         nonce = hex(os.urandom(random.randint(0, 2**32)))[2:]

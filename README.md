@@ -5,21 +5,24 @@
     - blocks: 會存一陣列為 blocks，為目前此 node 挖到最長的 chain
     - height: 這個 blocks 有多長
     - socket 部分:
-      - P2P port: 給別人來問問題 or 自己問問題 (?)
-      - user port: 自己去傳送 block 的狀態
+      - P2P port: 
+      - user port: 
 - Block
-    - version
-    - prev_block
-    - merkle_root
-    - target
-    - nonce
+    - header
+        - version
+        - prev_block
+        - merkle_root
+        - target
+        - nonce
+    - hash
 
 ## TODOs
 - 需要一個 Json parser
-- 做完 block 相關的 APIs
-- 做完 blocks 相關的 APIs
+- 做完 p2p 相關的 APIs
+- 做完 user 相關的 APIs
 - 其他 APIs
-- websocket
+- socket
+- 整個 network boardcast 的問題
 
 ## Note
 - 為什麼 height 不放在 block 裡面？
