@@ -6,7 +6,7 @@ run:
 
 ## Ping 1234
 p1: 
-	python3 client.py 127.0.0.1 1234 '{"method":"sendHeader","data":"bbb"}'
+	python3 client.py 127.0.0.1 1234 '{"method":"getBlocks","data":"bbb"}'
 
 ## Ping 2345
 p2:

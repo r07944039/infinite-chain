@@ -5,7 +5,9 @@ import io
 import struct
 
 from store import debug
+import api
 import store
+
 
 request_search = {
     "morpheus": "Follow the white rabbit. \U0001f430",
@@ -96,13 +98,16 @@ class Message:
     # TODO: 要如何安排 socket 和 API 之間的呼叫
     def _create_response_json_content(self):
         method = self.request.get("method")
-        query = self.request.get("value")
+        data = self.request.get("value")
+        host = self.addr[0]
+        port = self.addr[1]
         error = 0
         # print(method, query)
         if method == "sendHeader":
             result = "ok!"
             
-        # elif method == "getBlocks":
+        elif method == "getBlocks":
+            api.getBlocks(host, port, data)
         # elif method == "getBlockCount":
         # elif method == "getBlockHash":
         # elif method == "getBlockHeader":

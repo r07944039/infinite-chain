@@ -14,7 +14,7 @@ def send_request(host, port, method, data):
 
     return result
 
-'''
+''' 
     目前感覺所有 API 都必須是雙向的
     也就是說一個 function 要能處理收發 request
     python 有一個特性，就是可以取兩個名字一樣的 function (只要參數不一樣就好)
@@ -61,6 +61,7 @@ def getBlocks(hash_count, hash_begin, hash_stop):
 
 # Receive request
 def getBlocks(host, port, data):
+    debug(data)
     hash_count = data['hash_count']
     hash_begin = data['hash_begin']
     hash_stop = data['hash_stop']
@@ -122,4 +123,4 @@ def getBlockHeader(block_hash):
     return error, result   
 
 
-# send_request('127.0.0.1', 1234, 'sendHeader', 'aaaa')
+send_request('127.0.0.1', 1777, 'sendHeader', 'aaaa')
