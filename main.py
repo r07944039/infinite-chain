@@ -26,9 +26,6 @@ if __name__ == '__main__':
     store.state = store.START_FROM
     store.count = 0
     
-    # Init Node
-    store.node = Node()
-    
     # Open socket server
     f = open("config.json", 'r')
     data = json.load(f)
@@ -40,6 +37,9 @@ if __name__ == '__main__':
     # 因為很多地方要用，所以存成 global variable
     store.neighbor_list = data['neighbor_list']
     store.target = data['target']
+    
+    # Init Node
+    store.node = Node(store.target)
 
     server_p2p = Server(host, p2p_port)
     server_p2p.listen()
