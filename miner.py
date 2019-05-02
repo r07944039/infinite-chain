@@ -22,7 +22,7 @@ class Miner:
         height = store.node.height
         block = store.node.chain[height]
         header = block.block_header
-        pre_string = header.version + header.prev_block + header.merkle_root + header.target
+        pre_string = header.version + block.block_hash + header.merkle_root + header.target
         #nonce = os.urandom(4).hex()
         nonce_count = 0
         nonce = '{0:08x}'.format(nonce_count)
