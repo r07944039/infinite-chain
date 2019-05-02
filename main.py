@@ -52,6 +52,7 @@ if __name__ == '__main__':
 
     # TODO: getBlocks
     # api.getBlocks(cblock.)
+    # api.boardcast(host, p2p_port, 'sendHeader', 'aaaa')
     
     # Init miner
     miner = Miner()

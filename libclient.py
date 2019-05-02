@@ -83,7 +83,9 @@ class Message:
     def _process_response_json_content(self):
         content = self.response
         result = content.get("result")
-        print(f"got result: {result}")
+        # print(f"got result: {result}")
+        print(content)
+        print("===========================================")
 
     def _process_response_binary_content(self):
         content = self.response
@@ -195,7 +197,7 @@ class Message:
             encoding = self.jsonheader["content-encoding"]
             self.response = self._json_decode(data, encoding)
             # print("received response", repr(self.response), "from", self.addr)
-            print("received: {}".format(self.response))
+            # print("{}".format(self.response))
             self._process_response_json_content()
         else:
             # Binary or unknown content-type
