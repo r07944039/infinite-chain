@@ -4,7 +4,7 @@ count = 0
 
 # max_count 決定跑幾次後會禮讓(yield)給別人
 # 類似於 coroutine 的 priority
-MINER_COUNT = 100 
+MINER_COUNT = 1
 P2P_COUNT = 1
 USER_COUNT = 1
 

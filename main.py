@@ -57,8 +57,7 @@ if __name__ == '__main__':
         while True:
             debug(store.state)
             if store.state is store.MINER:
-                # TODO: 修改好 miner 後打開
-                # miner.mine()
+                miner.mine()
                 yield_next()
             elif store.state is store.P2P:
                 server_p2p.select()
