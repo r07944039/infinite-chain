@@ -1,6 +1,8 @@
 node = ""
 state = ""
 count = 0
+target = ""
+neighbor_list =[]
 
 
 # Debug function

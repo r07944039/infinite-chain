@@ -37,8 +37,8 @@ if __name__ == '__main__':
     host = '127.0.0.1'
     p2p_port = data['p2p_port']
     user_port = data['user_port']
-    neighbor_list = data['neighbor_list']
-    target = data['target']
+    store.neighbor_list = data['neighbor_list']
+    store.target = data['target']
 
     server_p2p = Server(host, p2p_port)
     server_p2p.listen()
@@ -46,12 +46,17 @@ if __name__ == '__main__':
     server_user = Server(host, user_port)
     server_user.listen()
 
+    node = store.node
+    # Current block
+    cblock = node.chain[node.height]
+
     # TODO: getBlocks
-    # api.getBlocks()
+    api.getBlocks(cblock.)
     
     # Init miner
     miner = Miner()
     
+    # Scheduling
     try:
         while True:
             debug(store.state)
