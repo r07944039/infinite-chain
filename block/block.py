@@ -32,4 +32,4 @@ class Block():
         block_hash = Block_hash(block_header.version, block_header.prev_block,
                                 block_header.merkle_root, block_header.target, block_header.nonce)
         self.block_header = block_header
-        self.block_hash = block_hash
+        self.block_hash = block_hash.hash
