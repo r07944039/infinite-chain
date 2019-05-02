@@ -5,20 +5,27 @@ import store
 from store import debug
 
 def send_request(host, port, method, data):
-    if data == None:
-        d = json.dumps({
-            'method': method
-        })
-    else:
-        d = json.dumps({
-            'method': method,
-            'data': data
-        })
+    d = json.dumps({
+        'method': method,
+        'data': data
+    })
     result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
     result.strip('=')
-    # print(result)
+    print(result)
 
     return result
+
+# TODO: python 裡面是不是有方法可以少傳 parameter?
+def send_request_without_data(host, port, method):
+    d = json.dumps({
+        'method': method
+    })
+    result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
+    result.strip('=')
+    print(result)
+
+    return result
+
 
 ''' 
     目前感覺所有 API 都必須是雙向的
@@ -133,4 +140,11 @@ def getBlockHeader(block_hash):
     return error, result   
 
 
-send_request('127.0.0.1', 1777, 'sendHeader', 'aaaa')
+
+# FIXME: 這裡的 getBlocks 會失敗(不明原因...)
+# send_request('127.0.0.1', 1234, 'getBlocks', '{"method":"getBlocks","data": { \
+#         "hash_count" : 1, \
+#         "hash_begin" : "0000000008e647742775a230787d66fdf92c46a48c896bfbc85cdc8acc67e87d", \
+#         "hash_stop" : "0000be5b53f2dc1a836d75e7a868bf9ee576d57891855b521eaabfa876f8a606" \
+#     }}')
+# send_request_without_data('127.0.0.1', 2345, 'getBlockCount')
