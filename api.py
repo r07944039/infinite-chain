@@ -32,6 +32,7 @@ def send_request_without_data(host, port, method):
     也就是說一個 function 要能處理收發 request
     python 有一個特性，就是可以取兩個名字一樣的 function (只要參數不一樣就好)
     目前打算用這種方式去解決
+    TODO: 猜測用相同名字可能會出錯，但因為還沒測過發送 request 所以 function name 暫時保留
 '''
 
 
@@ -102,9 +103,10 @@ def getBlocks(data):
 # Send request
 def getBlockCount(host, port):
     error = 0
+    result = 0
     result = send_request_without_data(host, port, 'getBlockCount')
 
-    if result == None:
+    if result == 0:
         error = 1
 
     return error, result
@@ -119,12 +121,13 @@ def getBlockCount():
 # Send request
 def getBlockHash(host, port):
     error = 0
+    result = 0
     d = json.dumps({
         'block_height': store.node.height
     })
     result = send_request(host, port, 'getBlockHash', d)
 
-    if result == None:
+    if result == 0:
         error = 1
 
     return error, result
@@ -143,15 +146,38 @@ def getBlockHash(data):
     result = chain[block_height].block_hash
     return error, result
 
-
-# 目前我只想得到 O(n) 直接去暴力搜那個 hash 在哪裡 QQ
-def getBlockHeader(block_hash):
-    for block in self.chain:
-        if block.block_hash == block_hash:
-            error = 0
-            result = block.block_header
-            return error, result
-    
-    error = 1
+# Send request
+def getBlockHeader(host, port):
+    error = 0
     result = 0
-    return error, result   
+    node = store.node
+    q = json.dumps({
+        'block_hash': node.chain[node.height].block_hash
+    })
+    result = send_request(host, port, 'getBlockHeader', q)
+    if result == 0:
+        error = 1
+
+    return error, result
+
+def getBlockHeader(data):
+    error = 0
+    result = 0
+    block_hash = data['block_hash']
+    chain = store.node.chain
+
+    for block in chain:
+        header = block.block_header
+        if block.block_hash == block_hash:
+            result = {
+                "version": header.version,
+                "prev_block": header.prev_block,
+                "merkle_root": header.merkle_root,
+                "target": header.target,
+                "nonce": header.nonce
+            }
+
+    if result == 0:
+        error = 1
+        
+    return error, result

@@ -20,6 +20,12 @@ t1:
 			"block_height": 10 \
 		} \
 	}'
+	python3 client.py 127.0.0.1 2345 '{ \
+		"method": "getBlockHeader", \
+		"data": { \
+			"block_hash": "0000be5b53f2dc1a836d75e7a868bf9ee576d57891855b521eaabfa876f8a606" \
+		} \
+	}' 
 
 ## Ping 2345
 p2:

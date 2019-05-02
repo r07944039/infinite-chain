@@ -112,7 +112,8 @@ class Message:
             error, result = api.getBlockCount()
         elif method == "getBlockHash":
             error, result = api.getBlockHash(data)
-        # elif method == "getBlockHeader":
+        elif method == "getBlockHeader":
+            error, result = api.getBlockHeader(data)
         else:
             error = 1
             result = f'Error: invalid method "{method}".'
