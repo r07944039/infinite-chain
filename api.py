@@ -102,7 +102,7 @@ def getBlocks(data):
 # Send request
 def getBlockCount(host, port):
     error = 0
-    result = send_request(host, port, 'getBlockCount')
+    result = send_request_without_data(host, port, 'getBlockCount')
 
     if result == None:
         error = 1
