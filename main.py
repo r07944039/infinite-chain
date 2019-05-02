@@ -51,7 +51,7 @@ if __name__ == '__main__':
     cblock = node.chain[node.height]
 
     # TODO: getBlocks
-    api.getBlocks(cblock.)
+    # api.getBlocks(cblock.)
     
     # Init miner
     miner = Miner()
