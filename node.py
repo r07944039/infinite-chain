@@ -15,10 +15,10 @@ def sha256(data):
 
 
 class Node():
-    def __init__(self):
+    def __init__(self,target):
         # Genesis block
         block = Block('0000000000000000000000000000000000000000000000000000000000000000',
-                      '0001000000000000000000000000000000000000000000000000000000000000', 2321)
+                      target, 2321)
         self.chain = []
         self.chain.append(block)
         self.height = 0
