@@ -14,6 +14,12 @@ t1:
 	python3 client.py 127.0.0.1 2345 '{ \
 		"method": "getBlockCount" \
 	}'
+	python3 client.py 127.0.0.1 2345 '{ \
+		"method": "getBlockHash", \
+		"data": { \
+			"block_height": 10 \
+		} \
+	}'
 
 ## Ping 2345
 p2:

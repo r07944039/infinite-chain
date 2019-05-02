@@ -116,16 +116,33 @@ def getBlockCount():
 
     return error, result
 
-def getBlockHash(block_height):
-    if block_height != None:
-        # os.system('python3 socket/app-client.py {} {}'.format(HOST, P2P_PORT))
-        result = self.chain[block_height].block_hash
-        error = 0
-    else:
-        result = 0
+# Send request
+def getBlockHash(host, port):
+    error = 0
+    d = json.dumps({
+        'block_height': store.node.height
+    })
+    result = send_request(host, port, 'getBlockHash', d)
+
+    if result == None:
         error = 1
 
-    return result
+    return error, result
+
+# Receive request
+def getBlockHash(data):
+    error = 0
+    block_height = data['block_height']
+    node = store.node
+    chain = node.chain
+    if block_height > node.height:
+        error = 1
+        result = 0
+        return error, result
+
+    result = chain[block_height].block_hash
+    return error, result
+
 
 # 目前我只想得到 O(n) 直接去暴力搜那個 hash 在哪裡 QQ
 def getBlockHeader(block_hash):
@@ -138,13 +155,3 @@ def getBlockHeader(block_hash):
     error = 1
     result = 0
     return error, result   
-
-
-
-# FIXME: 這裡的 getBlocks 會失敗(不明原因...)
-# send_request('127.0.0.1', 1234, 'getBlocks', '{"method":"getBlocks","data": { \
-#         "hash_count" : 1, \
-#         "hash_begin" : "0000000008e647742775a230787d66fdf92c46a48c896bfbc85cdc8acc67e87d", \
-#         "hash_stop" : "0000be5b53f2dc1a836d75e7a868bf9ee576d57891855b521eaabfa876f8a606" \
-#     }}')
-# send_request_without_data('127.0.0.1', 2345, 'getBlockCount')

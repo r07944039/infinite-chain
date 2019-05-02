@@ -110,7 +110,8 @@ class Message:
             error, result = api.getBlocks(data)
         elif method == "getBlockCount":
             error, result = api.getBlockCount()
-        # elif method == "getBlockHash":
+        elif method == "getBlockHash":
+            error, result = api.getBlockHash(data)
         # elif method == "getBlockHeader":
         else:
             error = 1
