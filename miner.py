@@ -30,14 +30,13 @@ class Miner:
             mine = pre_string + nonce
         
         # Add block into your block chain
-        new_block = Block(block.block_hash.hash, header.target, nonce)
+        new_block = Block(block.block_hash, header.target, nonce)
         self._add_new_block(new_block)
 
         # Boardcast new block to network
         # FIXME: 改好 api 後要打開
         #self.sendHeader(new_block.block_hash, new_block.block_header, height)
         debug(nonce)
-
         return nonce
     
     def mine(self):
