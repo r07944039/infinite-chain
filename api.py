@@ -1,8 +1,39 @@
 import subprocess
 import json
-
+from block.block import Block
 import store
 from store import debug
+
+def sha256(data):
+    m = hashlib.sha256()
+    m.update(data.encode('utf-8'))
+    return m.hexdigest()
+
+def verify_hash(block_hash, block_header):
+    error = 0
+    if sha256(block_header) != block_hash:
+        error = 1
+    return error
+
+def verify_prev_block(prev_block):
+    error = 0
+    pre_block_hash = store.node.chain[-1].block_hash
+    if prev_block != pre_block_hash:
+        error = 1
+    return error
+
+def verify_height(new_height):
+    error = 0
+    cur_height = store.node.height
+
+    if cur_height != new_height - 1:
+        error = 1
+    return error
+
+
+def _add_new_block(block):
+    store.node.chain.append(block)
+    store.node.height += 1
 
 def send_request(host, port, method, data):
     d = json.dumps({
@@ -38,10 +69,53 @@ def send_request_without_data(host, port, method):
 
 # p2p_port
 # broadcast API
+# Send request
 def sendHeader(block_hash, block_header, block_height):
+    d = json.dumps({
+        'block_hash': block_hash,
+        'block_header': block_header,
+        'block_height': block_height
+    })    
     for neighbor in store.neighbor_list:
-        # TODO: Send json via socket client
-        pass
+        n_host = neighbor['ip']
+        n_port = neighbor['p2p_port']
+        result = send_request(n_host, n_port, 'sendHeader', d)
+
+    error = 0
+
+    return error
+
+# Receive request
+def sendHeader(data):
+    block_hash = data['block_hash']
+    block_header = data['block_header']
+    block_height = data['block_height']
+
+    prev_block = block_header[8:72]
+    target = block_header[-72:-8]
+    nonce = block_header[-8:]
+
+    if verify_height(block_height):
+        error = 1
+        '''
+        檢查是不是height只差1
+        可能要再接getblocks之類的去同步
+        '''
+        return error
+    if verify_prev_block(prev_block):
+        '''
+        檢查前一個block_hash是不是現在header的prev_block
+        可能要再接getblocks之類的去同步
+        '''
+        error = 1
+        return error
+    if verify_hash(block_header):
+        # 只是本人hash值不對，感覺可以直接drop掉
+        error = 1
+        return error
+
+    new_block = Block(block_hash, target, nonce)
+    _add_new_block(new_block)
 
     error = 0
 
