@@ -2,6 +2,7 @@ import subprocess
 import json
 
 import store
+from store import debug
 
 def send_request(host, port, method, data):
     d = json.dumps({
@@ -61,7 +62,7 @@ def getBlocks(hash_count, hash_begin, hash_stop):
 
 # Receive request
 def getBlocks(host, port, data):
-    debug(data)
+    # debug(data)
     hash_count = data['hash_count']
     hash_begin = data['hash_begin']
     hash_stop = data['hash_stop']
@@ -71,17 +72,20 @@ def getBlocks(host, port, data):
     count = 0
     append = 0  
 
+    # FIXME: 找不到助教範例裡面的 hash
     # Brute force QAQ
     for block in store.node.chain:
         # 到尾了
-        if hash_stop == block.hash:
+        if hash_stop == block.block_hash:
             append = 0
             continue
         if append == 1:
-            result.append(block.hash)
+            result.append(block.block_hash)
         # 如果到 begin 的下一個開始計
-        if hash_begin == block.hash:
+        if hash_begin == block.block_hash:
             append = 1
+    
+    debug(result)
 
     # TODO: Error handling
     error = 0
