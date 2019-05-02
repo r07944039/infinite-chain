@@ -4,8 +4,8 @@ import sys
 import socket
 import selectors
 import traceback
-from termcolor import colored, cprint
 
+from store import debug
 import store
 import libserver
 
@@ -18,7 +18,8 @@ class Server:
 
     def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
-        cprint("accepted connection from {}".format(addr), 'magenta', attrs=['bold'])
+        print("===========================================")
+        print("accepted connection from {}".format(addr))
         conn.setblocking(False)
         message = libserver.Message(self.sel, conn, addr)
         self.sel.register(conn, selectors.EVENT_READ, data=message)
@@ -34,7 +35,7 @@ class Server:
         self.sel.register(lsock, selectors.EVENT_READ, data=None)
     
     def select(self):
-        # print("sel")
+        # debug("sel")
         events = self.sel.select(timeout=store.select_timeout)
         for key, mask in events:
             if key.data is None:

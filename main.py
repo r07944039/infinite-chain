@@ -5,13 +5,9 @@ import json
 from server import Server
 from node import Node
 from miner import Miner
+from store import debug
 import store
-
-DEBUG = 0
-
-def debug(s):
-    if DEBUG == 1:
-        print(s)
+import api
 
 
 def yield_next():
@@ -49,6 +45,9 @@ if __name__ == '__main__':
 
     server_user = Server(host, user_port)
     server_user.listen()
+
+    # TODO: getBlocks
+    # api.getBlocks()
     
     # Init miner
     miner = Miner()

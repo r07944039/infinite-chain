@@ -2,6 +2,14 @@ node = ""
 state = ""
 count = 0
 
+
+# Debug function
+DEBUG = 0
+
+def debug(s):
+    if DEBUG == 1:
+        print(s)
+
 # max_count 決定跑幾次後會禮讓(yield)給別人
 # 類似於 coroutine 的 priority
 MINER_COUNT = 1

@@ -3,7 +3,9 @@ import selectors
 import json
 import io
 import struct
-from termcolor import colored, cprint
+
+from store import debug
+import store
 
 request_search = {
     "morpheus": "Follow the white rabbit. \U0001f430",
@@ -162,7 +164,8 @@ class Message:
         self._write()
 
     def close(self):
-        cprint("closing connection to {}".format(self.addr), 'red', attrs=['bold'])
+        print("closing connection to {}".format(self.addr))
+        print("===========================================")
         try:
             self.selector.unregister(self.sock)
         except Exception as e:

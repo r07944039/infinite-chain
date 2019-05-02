@@ -4,6 +4,7 @@ import hashlib
 import store
 import os
 from block.block import Block
+from store import debug
 
 def sha256(data):
     m = hashlib.sha256()
@@ -17,7 +18,6 @@ class Miner:
         store.node.chain.append(block)
         store.node.height += 1
         
-    # TODO: 目前 run 起來會壞掉
     def mining(self):
         height = store.node.height
         block = store.node.chain[height]
@@ -34,8 +34,9 @@ class Miner:
         self._add_new_block(new_block)
 
         # Boardcast new block to network
+        # FIXME: 改好 api 後要打開
         #self.sendHeader(new_block.block_hash, new_block.block_header, height)
-        print(nonce)
+        debug(nonce)
 
         return nonce
     
