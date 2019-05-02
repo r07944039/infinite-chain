@@ -17,6 +17,14 @@ pp:
 	python3 client.py 127.0.0.1 1234 '{"method":"sendHeader","data":"bbb"}'
 	python3 client.py 127.0.0.1 2345 '{"method":"sendHeader","data":"bbb"}'
 
+## Open neighbor node 1
+n1:
+	python3 open_neighbor1.py
+
+## Open neighbor node 2
+n2:
+	python3 open_neighbor2.py
+
 #########
 # Help ##
 #########
