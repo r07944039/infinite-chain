@@ -15,7 +15,11 @@ def load_json(query):
     q = json.loads(query)
     # print(q)
     method = q["method"]
-    value = q["data"]
+    if 'data' in q:
+        value = q["data"]
+    else:
+        value = None
+        
     # print(method, value)
 
     return method, value

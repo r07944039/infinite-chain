@@ -55,8 +55,8 @@ class Message:
 
     def _write(self):
         if self._send_buffer:
-            print("sending to ", self.addr)
-            # print("sending \n", repr(self._send_buffer), "\nto", self.addr)
+            # print("sending to ", self.addr)
+            print("sending \n", repr(self._send_buffer), "\nto", self.addr)
             try:
                 # Should be ready to write
                 sent = self.sock.send(self._send_buffer)
@@ -107,8 +107,9 @@ class Message:
             result = "ok!"
             
         elif method == "getBlocks":
-            api.getBlocks(host, port, data)
-        # elif method == "getBlockCount":
+            error, result = api.getBlocks(data)
+        elif method == "getBlockCount":
+            error, result = api.getBlockCount()
         # elif method == "getBlockHash":
         # elif method == "getBlockHeader":
         else:

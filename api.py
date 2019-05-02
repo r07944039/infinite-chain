@@ -5,10 +5,15 @@ import store
 from store import debug
 
 def send_request(host, port, method, data):
-    d = json.dumps({
-        'method': method,
-        'data': data
-    })
+    if data == None:
+        d = json.dumps({
+            'method': method
+        })
+    else:
+        d = json.dumps({
+            'method': method,
+            'data': data
+        })
     result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
     result.strip('=')
     # print(result)
@@ -54,7 +59,7 @@ def getBlocks(hash_count, hash_begin, hash_stop):
     return error, result
 
 # Receive request
-def getBlocks(host, port, data):
+def getBlocks(data):
     # debug(data)
     hash_count = data['hash_count']
     hash_begin = data['hash_begin']
@@ -87,13 +92,20 @@ def getBlocks(host, port, data):
     
 # user_port
 # Non broadcast API
-def getBlockCount():
-    if self == None:
+# Send request
+def getBlockCount(host, port):
+    error = 0
+    result = send_request(host, port, 'getBlockCount')
+
+    if result == None:
         error = 1
-        result = 0
-    else:
-        error = 0
-        result = self.height
+
+    return error, result
+
+# Receive request
+def getBlockCount():
+    error = 0
+    result = store.node.height
 
     return error, result
 
