@@ -44,17 +44,10 @@ def getBlocks(hash_count, hash_begin, hash_stop):
     for neighbor in store.neighbor_list:
         n_host = neighbor.ip
         n_port = neighbor.p2p_port      
-        '''
-            TODO: 
-            我現在是把每一次接收到的結果都當成最終的 result
-            文件中是寫 return Block header of the block_hash
-            但我沒有看到如何去比較哪個 hash 才是最長的？
-            FIXME: 
-            目前想到的解法是多傳一個 node.height 回來, 這樣就可以比較誰最長 (但我還沒實作)
-            BTW 這個 API 真的很謎
-        '''
-        result = send_request(n_host, n_port, 'getBlocks', d)
+        result.append(send_request(n_host, n_port, 'getBlocks', d))
 
+    # TODO: 目前 result 是直接取較長的
+    result = max(result[0], result[1])
     # TODO: Error handling & 判斷
     error = 0
 
@@ -86,10 +79,11 @@ def getBlocks(host, port, data):
             append = 1
     
     debug(result)
+    # 如果找不到結果就回傳錯誤
+    if len(result) == 0:
+        error = 1
 
-    # TODO: Error handling
-    error = 0
-    return result
+    return error, result
     
 # user_port
 # Non broadcast API
