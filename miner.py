@@ -5,7 +5,7 @@ import store
 import os
 from block.block import Block
 from store import debug
-from api import sendHeader
+from api import sendHeader_send
 
 def sha256(data):
     m = hashlib.sha256()
@@ -38,8 +38,8 @@ class Miner:
         new_block = Block(block.block_hash, header.target, nonce)
         self._add_new_block(new_block)
         # Boardcast new block to network
-        # FIXME: 改好 api 後要打開
-        sendHeader(new_block.block_hash, new_block.block_header.header, height)
+        # FIXME: 目前開了會跑不動
+        sendHeader_send(new_block.block_hash, new_block.block_header.header, height)
         debug(nonce)
         return nonce
     

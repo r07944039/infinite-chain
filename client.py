@@ -55,7 +55,7 @@ if len(sys.argv) != 4:
     print("usage:", sys.argv[0], "<host> <port> <json_request>")
     sys.exit(1)
 
-print((sys.argv))
+# print((sys.argv))
 host, port = sys.argv[1], int(sys.argv[2])
 query = sys.argv[3]
 # method, value = sys.argv[3], sys.argv[4]

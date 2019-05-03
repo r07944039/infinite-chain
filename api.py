@@ -26,7 +26,7 @@ def verify_height(new_height):
     error = 0
     cur_height = store.node.height
 
-    if cur_height != new_height - 1:
+    if cur_height != int(new_height) - 1:
         error = 1
     return error
 
@@ -57,25 +57,15 @@ def send_request_without_data(host, port, method):
 
     return result
 
-
-''' 
-    目前感覺所有 API 都必須是雙向的
-    也就是說一個 function 要能處理收發 request
-    python 有一個特性，就是可以取兩個名字一樣的 function (只要參數不一樣就好)
-    目前打算用這種方式去解決
-    TODO: 猜測用相同名字可能會出錯，但因為還沒測過發送 request 所以 function name 暫時保留
-'''
-
-
 # p2p_port
 # broadcast API
 # Send request
-def sendHeader(block_hash, block_header, block_height):
+def sendHeader_send(block_hash, block_header, block_height):
     d = json.dumps({
         'block_hash': block_hash,
         'block_header': block_header,
         'block_height': block_height
-    })    
+    })
     for neighbor in store.neighbor_list:
         n_host = neighbor['ip']
         n_port = neighbor['p2p_port']
@@ -86,7 +76,7 @@ def sendHeader(block_hash, block_header, block_height):
     return error
 
 # Receive request
-def sendHeader(data):
+def sendHeader_receive(data):
     block_hash = data['block_hash']
     block_header = data['block_header']
     block_height = data['block_height']
@@ -98,19 +88,19 @@ def sendHeader(data):
     if verify_height(block_height):
         error = 1
         '''
-        檢查是不是height只差1
-        可能要再接getblocks之類的去同步
+        檢查是不是 height 只差 1
+        可能要再接 getblocks 之類的去同步
         '''
         return error
     if verify_prev_block(prev_block):
         '''
-        檢查前一個block_hash是不是現在header的prev_block
-        可能要再接getblocks之類的去同步
+        檢查前一個 block_hash 是不是現在 header 的 prev_block
+        可能要再接 getblocks 之類的去同步
         '''
         error = 1
         return error
     if verify_hash(block_header):
-        # 只是本人hash值不對，感覺可以直接drop掉
+        # 只是本人 hash 值不對，感覺可以直接 drop 掉
         error = 1
         return error
 
@@ -122,7 +112,7 @@ def sendHeader(data):
     return error
 
 # Send request
-def getBlocks(hash_count, hash_begin, hash_stop):
+def getBlocks_send(hash_count, hash_begin, hash_stop):
     d = json.dumps({
         'hash_count': hash_count,
         'hash_begin': hash_begin,
@@ -141,7 +131,7 @@ def getBlocks(hash_count, hash_begin, hash_stop):
     return error, result
 
 # Receive request
-def getBlocks(data):
+def getBlocks_receive(data):
     # debug(data)
     hash_count = data['hash_count']
     hash_begin = data['hash_begin']
@@ -175,7 +165,7 @@ def getBlocks(data):
 # user_port
 # Non broadcast API
 # Send request
-def getBlockCount(host, port):
+def getBlockCount_send(host, port):
     error = 0
     result = 0
     result = send_request_without_data(host, port, 'getBlockCount')
@@ -186,14 +176,14 @@ def getBlockCount(host, port):
     return error, result
 
 # Receive request
-def getBlockCount():
+def getBlockCount_receive():
     error = 0
     result = store.node.height
 
     return error, result
 
 # Send request
-def getBlockHash(host, port):
+def getBlockHash_send(host, port):
     error = 0
     result = 0
     d = json.dumps({
@@ -207,7 +197,7 @@ def getBlockHash(host, port):
     return error, result
 
 # Receive request
-def getBlockHash(data):
+def getBlockHash_receive(data):
     error = 0
     block_height = data['block_height']
     node = store.node
@@ -221,7 +211,7 @@ def getBlockHash(data):
     return error, result
 
 # Send request
-def getBlockHeader(host, port):
+def getBlockHeader_send(host, port):
     error = 0
     result = 0
     node = store.node
@@ -234,7 +224,7 @@ def getBlockHeader(host, port):
 
     return error, result
 
-def getBlockHeader(data):
+def getBlockHeader_receive(data):
     error = 0
     result = 0
     block_hash = data['block_hash']

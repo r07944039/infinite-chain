@@ -94,31 +94,30 @@ class Message:
         message = message_hdr + jsonheader_bytes + content_bytes
         return message
 
-    # TODO: 修改成成呼叫我們 API 的格式
-    # TODO: 要如何安排 socket 和 API 之間的呼叫
     def _create_response_json_content(self):
         method = self.request.get("method")
         data = self.request.get("value")
         host = self.addr[0]
         port = self.addr[1]
         error = 0
-        # print(method, query)
-        if method == "sendHeader":
-            result = "ok!"
-            
-        elif method == "getBlocks":
-            error, result = api.getBlocks(data)
-        elif method == "getBlockCount":
-            error, result = api.getBlockCount()
-        elif method == "getBlockHash":
-            error, result = api.getBlockHash(data)
-        elif method == "getBlockHeader":
-            error, result = api.getBlockHeader(data)
-        else:
-            error = 1
-            result = f'Error: invalid method "{method}".'
 
-        content = {"error": error, "result": result}
+        if method == "sendHeader":
+            error = api.sendHeader_receive(data)
+            content = {"error": error}
+        else:
+            if method == "getBlocks":
+                error, result = api.getBlocks_receive(data)
+            elif method == "getBlockCount":
+                error, result = api.getBlockCount_receive()
+            elif method == "getBlockHash":
+                error, result = api.getBlockHash_receive(data)
+            elif method == "getBlockHeader":
+                error, result = api.getBlockHeader_receive(data)
+            else:
+                error = 1
+                result = f'Error: invalid method "{method}".'
+
+            content = {"error": error, "result": result}
 
         # if method == "search":
         #     query = self.request.get("value")
