@@ -1,9 +1,10 @@
-import subprocess
+# import subprocess
 import socket
 import json
 
 from block.block import Block
 from store import debug
+from client import send_socket_req
 import store
 
 def is_connected(host, port):
@@ -52,9 +53,10 @@ def send_request(host, port, method, data):
         'method': method,
         'data': data
     })
-    result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
-    result.strip('=')
-    # print(result)
+    # result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
+    result = send_socket_req(host, port, d)
+    # result.strip('=')
+    print(result)
 
     return result
 
@@ -63,9 +65,10 @@ def send_request_without_data(host, port, method):
     d = json.dumps({
         'method': method
     })
-    result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
-    result.strip('=')
-    # print(result)
+    # result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
+    # result.strip('=')
+    result = send_socket_req(host, port, d)
+    print(result)
 
     return result
 

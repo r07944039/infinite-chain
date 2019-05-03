@@ -8,8 +8,6 @@ import json
 
 import libclient
 
-sel = selectors.DefaultSelector()
-
 
 def load_json(query):
     q = json.loads(query)
@@ -39,7 +37,7 @@ def create_request(method, value):
     #     )
 
 
-def start_connection(host, port, request):
+def start_connection(host, port, request, sel):
     addr = (host, port)
     print("===========================================")
     print("starting connection to", addr)
@@ -51,35 +49,36 @@ def start_connection(host, port, request):
     sel.register(sock, events, data=message)
 
 
-if len(sys.argv) != 4:
-    print("usage:", sys.argv[0], "<host> <port> <json_request>")
-    sys.exit(1)
+# if len(sys.argv) != 4:
+#     print("usage:", sys.argv[0], "<host> <port> <json_request>")
+#     sys.exit(1)
 
 # print((sys.argv))
-host, port = sys.argv[1], int(sys.argv[2])
-query = sys.argv[3]
-# method, value = sys.argv[3], sys.argv[4]
-method, value = load_json(query)
-request = create_request(method, value)
-start_connection(host, port, request)
+def send_socket_req(host, port, query):
+    sel = selectors.DefaultSelector()
+    method, value = load_json(query)
+    start_connection(host, port, query, sel)
+    # print(request)
+    select(sel)
 
-try:
-    while True:
-        events = sel.select(timeout=1)
-        for key, mask in events:
-            message = key.data
-            try:
-                message.process_events(mask)
-            except Exception:
-                print(
-                    "main: error: exception for",
-                    f"{message.addr}:\n{traceback.format_exc()}",
-                )
-                message.close()
-        # Check for a socket being monitored to continue.
-        if not sel.get_map():
-            break
-except KeyboardInterrupt:
-    print("caught keyboard interrupt, exiting")
-finally:
-    sel.close()
+def select(sel):
+    try:
+        while True:
+            events = sel.select(timeout=1)
+            for key, mask in events:
+                message = key.data
+                try:
+                    message.process_events(mask)
+                except Exception:
+                    print(
+                        "main: error: exception for",
+                        f"{message.addr}:\n{traceback.format_exc()}",
+                    )
+                    message.close()
+            # Check for a socket being monitored to continue.
+            if not sel.get_map():
+                break
+    except KeyboardInterrupt:
+        print("caught keyboard interrupt, exiting")
+    finally:
+        sel.close()

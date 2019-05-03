@@ -31,6 +31,7 @@ class Message:
         self.selector.modify(self.sock, events, data=self)
 
     def _read(self):
+        print(self)
         try:
             # Should be ready to read
             data = self.sock.recv(4096)

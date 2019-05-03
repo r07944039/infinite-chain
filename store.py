@@ -28,7 +28,7 @@ START_FROM = MINER
 # p2p user server 的 select timeout
 # 如果等於 none 將會直到有人進來才會繼續
 # 這是 blocking 的
-select_timeout = 1
+select_timeout = 0.5
 
 routines = {
     MINER: {
