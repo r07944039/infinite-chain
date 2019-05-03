@@ -27,7 +27,7 @@ if __name__ == '__main__':
     store.count = 0
     
     # Open socket server
-    f = open("config.json", 'r')
+    f = open("config_n1.json", 'r')
     data = json.load(f)
     f.close()
 
@@ -39,8 +39,8 @@ if __name__ == '__main__':
     # Init Node
     store.node = Node(store.target)
 
-    p2p_port = store.neighbor_list[0]['p2p_port']
-    user_port = store.neighbor_list[0]['user_port']
+    p2p_port = data['p2p_port']
+    user_port = data['user_port']
 
     server_p2p = Server(host, p2p_port)
     server_p2p.listen()

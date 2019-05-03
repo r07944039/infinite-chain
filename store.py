@@ -6,7 +6,7 @@ neighbor_list =[]
 
 
 # Debug function
-DEBUG = 0
+DEBUG = 1
 
 def debug(s):
     if DEBUG == 1:
@@ -28,7 +28,7 @@ START_FROM = MINER
 # p2p user server 的 select timeout
 # 如果等於 none 將會直到有人進來才會繼續
 # 這是 blocking 的
-select_timeout = 0.05
+select_timeout = 1
 
 routines = {
     MINER: {

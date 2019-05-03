@@ -37,8 +37,8 @@ class Miner:
         # Add block into your block chain
         new_block = Block(block.block_hash, header.target, nonce)
         self._add_new_block(new_block)
+        
         # Boardcast new block to network
-        # FIXME: 目前開了會跑不動
         sendHeader_send(new_block.block_hash, new_block.block_header.header, height)
         debug(nonce)
         return nonce

@@ -1,8 +1,20 @@
 import subprocess
+import socket
 import json
+
 from block.block import Block
-import store
 from store import debug
+import store
+
+def is_connected(host, port):
+  try:
+    # connect to the host -- tells us if the host is actually
+    # reachable
+    s = socket.create_connection((host, port), 2)
+    return True
+  except:
+     pass
+  return False
 
 def sha256(data):
     m = hashlib.sha256()
@@ -42,7 +54,7 @@ def send_request(host, port, method, data):
     })
     result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
     result.strip('=')
-    print(result)
+    # print(result)
 
     return result
 
@@ -53,7 +65,7 @@ def send_request_without_data(host, port, method):
     })
     result = subprocess.getoutput("python3 client.py {} {} '{}'".format(host, port, d))
     result.strip('=')
-    print(result)
+    # print(result)
 
     return result
 
@@ -69,7 +81,10 @@ def sendHeader_send(block_hash, block_header, block_height):
     for neighbor in store.neighbor_list:
         n_host = neighbor['ip']
         n_port = neighbor['p2p_port']
-        result = send_request(n_host, n_port, 'sendHeader', d)
+        if is_connected(n_host, n_port):
+            print('================start sendHeader==================')
+            result = send_request(n_host, n_port, 'sendHeader', d)
+            print(result)
 
     error = 0
 
@@ -77,9 +92,10 @@ def sendHeader_send(block_hash, block_header, block_height):
 
 # Receive request
 def sendHeader_receive(data):
-    block_hash = data['block_hash']
-    block_header = data['block_header']
-    block_height = data['block_height']
+    d = json.loads(data)
+    block_hash = d['block_hash']
+    block_header = d['block_header']
+    block_height = d['block_height']
 
     prev_block = block_header[8:72]
     target = block_header[-72:-8]
@@ -119,9 +135,10 @@ def getBlocks_send(hash_count, hash_begin, hash_stop):
         'hash_stop': hash_stop
     })
     for neighbor in store.neighbor_list:
-        n_host = neighbor.ip
-        n_port = neighbor.p2p_port      
-        result.append(send_request(n_host, n_port, 'getBlocks', d))
+        n_host = neighbor['ip']
+        n_port = neighbor['p2p_port']
+        if is_connected(n_host, n_port):
+            result.append(send_request(n_host, n_port, 'getBlocks', d))
 
     # TODO: 目前 result 是直接取較長的
     result = max(result[0], result[1])
@@ -132,10 +149,10 @@ def getBlocks_send(hash_count, hash_begin, hash_stop):
 
 # Receive request
 def getBlocks_receive(data):
-    # debug(data)
-    hash_count = data['hash_count']
-    hash_begin = data['hash_begin']
-    hash_stop = data['hash_stop']
+    d = json.loads(data)
+    hash_count = d['hash_count']
+    hash_begin = d['hash_begin']
+    hash_stop = d['hash_stop']
 
     # 先找到那個 block 再回 block headers list
     result = []
@@ -199,7 +216,8 @@ def getBlockHash_send(host, port):
 # Receive request
 def getBlockHash_receive(data):
     error = 0
-    block_height = data['block_height']
+    d = json.loads(data)
+    block_height = d['block_height']
     node = store.node
     chain = node.chain
     if block_height > node.height:
@@ -227,7 +245,8 @@ def getBlockHeader_send(host, port):
 def getBlockHeader_receive(data):
     error = 0
     result = 0
-    block_hash = data['block_hash']
+    d = json.loads(data)
+    block_hash = d['block_hash']
     chain = store.node.chain
 
     for block in chain:
