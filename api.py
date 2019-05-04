@@ -43,6 +43,13 @@ def verify_height(new_height):
         error = 1
     return error
 
+def header_to_items(header):
+    prev_block = header[8:72]
+    target = header[-72:-8]
+    nonce = header[-8:]
+    
+    return prev_block, target, nonce
+
 
 def _add_new_block(block):
     store.node.chain.append(block)
@@ -100,31 +107,39 @@ def sendHeader_receive(data):
     block_header = d['block_header']
     block_height = d['block_height']
 
-    prev_block = block_header[8:72]
-    target = block_header[-72:-8]
-    nonce = block_header[-8:]
+    prev_block, target, nonce = header_to_items(block_header)
+
+    need_getBlocks = False
 
     if verify_height(block_height):
-        error = 1
-        '''
-        檢查是不是 height 只差 1
-        可能要再接 getblocks 之類的去同步
-        '''
-        return error
+        need_getBlocks = True
+
     if verify_prev_block(prev_block):
-        '''
-        檢查前一個 block_hash 是不是現在 header 的 prev_block
-        可能要再接 getblocks 之類的去同步
-        '''
-        error = 1
-        return error
+        need_getBlocks = True
+
     if verify_hash(block_header):
         # 只是本人 hash 值不對，感覺可以直接 drop 掉
         error = 1
         return error
 
-    new_block = Block(block_hash, target, nonce)
-    _add_new_block(new_block)
+    if need_getBlocks:
+        cur_height = store.node.height
+        cur_hash = store.node.chain[cur_height].block_hash
+        hash_count = block_height - cur_height
+        hash_begin = cur_hash
+        hash_stop = block_hash
+        result = getBlocks_send(hash_count, hash_begin, hash_stop)
+
+        # check if reult[0] == hash_begin(current header)
+
+        for header in result[1:]:
+            prev_block, target, nonce = header_to_items(header)
+            new_block = Block(prev_block, target, nonce)
+            _add_new_block(new_block)
+
+    else:
+        new_block = Block(prev_block, target, nonce)
+        _add_new_block(new_block)
 
     error = 0
 
