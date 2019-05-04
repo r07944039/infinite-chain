@@ -24,14 +24,15 @@ class Miner:
         block = store.node.chain[height]
         header = block.block_header
         pre_string = header.version + block.block_hash + header.merkle_root + header.target
-        #nonce = os.urandom(4).hex()
-        nonce_count = 0
-        nonce = '{0:08x}'.format(nonce_count)
+        nonce = os.urandom(4).hex()
+        nonce_count = int(nonce,16)
         mine = pre_string + nonce
         while int(sha256(mine),16) > int(header.target,16):
-            #nonce = os.urandom(4).hex()
             nonce_count += 1
-            nonce = '{0:08x}'.format(nonce_count)     
+            nonce = '{0:08x}'.format(nonce_count)
+            if len(nonce) > 8:
+                nonce_count = 0
+                nonce = nonce[1:]
             mine = pre_string + nonce
         
         # Add block into your block chain
