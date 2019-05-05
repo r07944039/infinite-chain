@@ -76,7 +76,7 @@ def send_request(host, port, method, data):
     # result = send_socket_req(host, port, d)
     result = send_header(host, port, d)
     # result.strip('=')
-    print(result)
+    # print(result)
     return result
 
 # TODO: python 裡面是不是有方法可以少傳 parameter?
