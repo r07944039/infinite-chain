@@ -57,7 +57,8 @@ def start_connection(host, port, request, sel):
 def send_socket_req(host, port, query):
     sel = selectors.DefaultSelector()
     method, value = load_json(query)
-    start_connection(host, port, query, sel)
+    request = create_request(method, value)
+    start_connection(host, port, request, sel)
     # print(request)
     select(sel)
 
