@@ -100,9 +100,23 @@ class Message:
         host = self.addr[0]
         port = self.addr[1]
         error = 0
+        print("!!!!!!!!!!")
 
         if method == "sendHeader":
+            node = self.request.get("node")
+            print(node)
+            if node == 1777:
+                self.addr = ('127.0.0.1', 1777)
+                print("ok!")
+            elif node == 1234:
+                self.addr = ('127.0.0.1', 1234)
+                print("ok!")
+            elif node == 2777:
+                self.addr = ('127.0.0.1', 2777)
+            # print("data")
+            # print(data)
             error = api.sendHeader_receive(data)
+            # error = 0
             content = {"error": error}
         else:
             if method == "getBlocks":

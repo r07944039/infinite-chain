@@ -87,6 +87,7 @@ class Message:
         # print(f"got result: {result}")
         print(content)
         print("===========================================")
+        return result
 
     def _process_response_binary_content(self):
         content = self.response
@@ -116,12 +117,14 @@ class Message:
         if not self._request_queued:
             self.queue_request()
 
-        self._write()
+        result = self._write()
 
         if self._request_queued:
             if not self._send_buffer:
                 # Set selector to listen for read events, we're done writing.
                 self._set_selector_events_mask("r")
+
+        return result
 
     def close(self):
         print("closing connection to", self.addr)
@@ -199,7 +202,7 @@ class Message:
             self.response = self._json_decode(data, encoding)
             # print("received response", repr(self.response), "from", self.addr)
             # print("{}".format(self.response))
-            self._process_response_json_content()
+            result = self._process_response_json_content()
         else:
             # Binary or unknown content-type
             self.response = data
@@ -209,4 +212,5 @@ class Message:
             )
             self._process_response_binary_content()
         # Close when response has been processed
+        return result
         self.close()

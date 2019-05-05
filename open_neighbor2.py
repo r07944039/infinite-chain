@@ -39,7 +39,8 @@ if __name__ == '__main__':
     # Init Node
     store.node = Node(store.target)
 
-    p2p_port = data['p2p_port']
+    store.P2P_PORT = data['p2p_port']
+    p2p_port = store.P2P_PORT
     user_port = data['user_port']
 
     server_p2p = Server(host, p2p_port)

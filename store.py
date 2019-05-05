@@ -3,10 +3,10 @@ state = ""
 count = 0
 target = ""
 neighbor_list =[]
-
+P2P_PORT = ''
 
 # Debug function
-DEBUG = 1
+DEBUG = 0
 
 def debug(s):
     if DEBUG == 1:

@@ -32,7 +32,8 @@ if __name__ == '__main__':
     f.close()
 
     host = '127.0.0.1'
-    p2p_port = data['p2p_port']
+    store.P2P_PORT = data['p2p_port']
+    p2p_port = store.P2P_PORT
     user_port = data['user_port']
     # 因為很多地方要用，所以存成 global variable
     store.neighbor_list = data['neighbor_list']

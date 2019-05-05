@@ -22,12 +22,40 @@ def load_json(query):
 
     return method, value
 
+def load_json_h(query):
+    q = json.loads(query)
+    # print(q)
+    method = q["method"]
+    node = q["node"]
+    if 'data' in q:
+        value = q["data"]
+    else:
+        value = None
+        
+    # print(method, value)
+
+    return method, value, node
+
 def create_request(method, value):
     # if method is not None:
     return dict(
         type="text/json",
         encoding="utf-8",
         content=dict(method=method, value=value),
+    )
+    # else:
+    #     return dict(
+    #         type="binary/custom-client-binary-type",
+    #         encoding="binary",
+    #         content=bytes(method + value, encoding="utf-8"),
+    #     )
+
+def create_request_h(method, value, node):
+    # if method is not None:
+    return dict(
+        type="text/json",
+        encoding="utf-8",
+        content=dict(method=method, value=value, node=node),
     )
     # else:
     #     return dict(
@@ -47,6 +75,7 @@ def start_connection(host, port, request, sel):
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     message = libclient.Message(sel, sock, addr, request)
     sel.register(sock, events, data=message)
+    return message
 
 
 # if len(sys.argv) != 4:
@@ -62,10 +91,24 @@ def send_socket_req(host, port, query):
     # print(request)
     select(sel)
 
+def send_header(host, port, query):
+    sel = selectors.DefaultSelector()
+    method, value, node = load_json_h(query)
+    request = create_request_h(method, value, node)
+    print(request)
+    msg = start_connection(host, port, request, sel)
+    result = msg.write()
+    # print(result)
+    sel.close()
+
+    return result
+    # print(request)
+    # select(sel)
+
 def select(sel):
     try:
         while True:
-            events = sel.select(timeout=1)
+            events = sel.select(timeout=None)
             for key, mask in events:
                 message = key.data
                 try:
