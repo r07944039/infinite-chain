@@ -44,6 +44,7 @@ class Message:
         try:
             # Should be ready to read
             data = self.sock.recv(4096)
+            pass
         except BlockingIOError:
             # Resource temporarily unavailable (errno EWOULDBLOCK)
             pass
@@ -56,7 +57,7 @@ class Message:
     def _write(self):
         if self._send_buffer:
             # print("sending to ", self.addr)
-            print("sending \n", repr(self._send_buffer), "\nto", self.addr)
+            # print("sending \n", repr(self._send_buffer), "\nto", self.addr)
             try:
                 # Should be ready to write
                 sent = self.sock.send(self._send_buffer)
@@ -184,7 +185,7 @@ class Message:
 
     def close(self):
         print("closing connection to {}".format(self.addr))
-        print("===========================================")
+        # print("===========================================")
         try:
             self.selector.unregister(self.sock)
         except Exception as e:

@@ -85,8 +85,8 @@ class Message:
         content = self.response
         result = content.get("result")
         # print(f"got result: {result}")
-        print(content)
-        print("===========================================")
+        # print(content)
+        # print("===========================================")
         return result
 
     def _process_response_binary_content(self):

@@ -109,7 +109,6 @@ def sendHeader_send(block_hash, block_header, block_height):
         n_host = neighbor['ip']
         n_port = neighbor['p2p_port']
         if is_connected(n_host, n_port):
-            print('================start sendHeader==================')
             result = send_request(n_host, n_port, 'sendHeader', d)
             print(result)
 
@@ -147,14 +146,15 @@ def sendHeader_receive(data):
         hash_count = block_height - cur_height
         hash_begin = cur_hash
         hash_stop = block_hash
+        # FIXME: 這邊要改
         result = getBlocks_send(hash_count, hash_begin, hash_stop)
 
         # check if reult[0] == hash_begin(current header)
 
-        for header in result[1:]:
-            prev_block, target, nonce = header_to_items(header)
-            new_block = Block(prev_block, target, nonce)
-            _add_new_block(new_block)
+        # for header in result[1:]:
+        #     prev_block, target, nonce = header_to_items(header)
+        #     new_block = Block(prev_block, target, nonce)
+        #     _add_new_block(new_block)
 
     else:
         new_block = Block(prev_block, target, nonce)
@@ -173,52 +173,63 @@ def getBlocks_send(hash_count, hash_begin, hash_stop):
         'hash_begin': hash_begin,
         'hash_stop': hash_stop
     })
-    result = []
+    # result = []
     for neighbor in store.neighbor_list:
         n_host = neighbor['ip']
         n_port = neighbor['p2p_port']
         if is_connected(n_host, n_port):
-            result.append(send_request(n_host, n_port, 'getBlocks', d))
+            send_request(n_host, n_port, 'getBlocks', d)
 
     # TODO: 目前 result 是直接取較長的
-    if len(result) > 1:
-        result = max(result[0], result[1])
+    # if len(result) > 1:
+    #     result = max(result[0], result[1])
     # TODO: Error handling & 判斷
-    error = 0
+    # error = 0
 
-    return error, result
+    # return error, result
 
 # Receive request
 
 
 def getBlocks_receive(data):
     d = json.loads(data)
-    hash_count = d['hash_count']
-    hash_begin = d['hash_begin']
-    hash_stop = d['hash_stop']
 
-    # 先找到那個 block 再回 block headers list
-    result = []
-    count = 0
-    append = 0
+    if 'result' in d:
+        if len(result) > 1:
+            result = max(result[0], result[1])
+        for header in result[1:]:
+            prev_block, target, nonce = header_to_items(header)
+            new_block = Block(prev_block, target, nonce)
+            _add_new_block(new_block)
+        error = 0
+    else:
 
-    # FIXME: 找不到助教範例裡面的 hash
-    # Brute force QAQ
-    for block in store.node.chain:
-        # 到尾了
-        if hash_stop == block.block_hash:
-            append = 0
-            continue
-        if append == 1:
-            result.append(block.block_hash)
-        # 如果到 begin 的下一個開始計
-        if hash_begin == block.block_hash:
-            append = 1
+        hash_count = d['hash_count']
+        hash_begin = d['hash_begin']
+        hash_stop = d['hash_stop']
 
-    debug(result)
-    # 如果找不到結果就回傳錯誤
-    if len(result) == 0:
-        error = 1
+        # 先找到那個 block 再回 block headers list
+        result = []
+        count = 0
+        append = 0
+
+        # FIXME: 找不到助教範例裡面的 hash
+        # Brute force QAQ
+        for block in store.node.chain:
+            # 到尾了
+            if hash_stop == block.block_hash:
+                append = 0
+                continue
+            if append == 1:
+                result.append(block.block_hash)
+            # 如果到 begin 的下一個開始計
+            if hash_begin == block.block_hash:
+                append = 1
+
+        debug(result)
+        # 如果找不到結果就回傳錯誤
+        if len(result) == 0:
+            error = 1
 
     return error, result
 

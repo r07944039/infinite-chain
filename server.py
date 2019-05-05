@@ -18,7 +18,7 @@ class Server:
 
     def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
-        print("===========================================")
+        # print("===========================================")
         print("accepted connection from {}".format(addr))
         conn.setblocking(False)
         message = libserver.Message(self.sel, conn, addr)

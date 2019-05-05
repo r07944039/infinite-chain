@@ -67,7 +67,6 @@ def create_request_h(method, value, node):
 
 def start_connection(host, port, request, sel):
     addr = (host, port)
-    print("===========================================")
     print("starting connection to", addr)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setblocking(False)
