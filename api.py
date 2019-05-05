@@ -2,7 +2,7 @@
 import socket
 import json
 import hashlib
-
+import os
 from block.block import Block
 from store import debug
 from client import send_socket_req
@@ -51,6 +51,13 @@ def verify_height(new_height):
         error = 1
     return error
 
+def verify_shorter(new_height):
+    cur_height = store.node.height
+
+    if cur_height >= int(new_height):
+        error = 1
+    return error 
+
 
 def header_to_items(header):
     prev_block = header[8:72]
@@ -59,10 +66,46 @@ def header_to_items(header):
 
     return prev_block, target, nonce
 
+def _check_and_make_directory(dir_name):
+    path1=os.getcwd()  
+    dir_name = os.path.join(path1, dir_name)
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+
+def write_file(dir_name, file_name, block_f):
+    _check_and_make_directory(dir_name)
+
+    file_name = os.path.join(dir_name,file_name)   
+    with open(file_name,'w') as f:
+        json.dump(block_f,f)
+
+def read_file(dir_name, file_name):
+    file_name = os.path.join(dir_name,file_name)
+    if not os.path.exists(file_name):
+        error = 1
+        return error, 0, 0
+    
+    with open(file_name,'r') as f:
+        d = json.load(f)
+    
+    block_header = d['header']
+    block_hash = d['hash']
+    
+    error = 0    
+    return error, block_header, block_hash
 
 def _add_new_block(block):
     store.node.chain.append(block)
     store.node.height += 1
+    dir_name = '{}{}'.format("node_", str(store.P2P_PORT))
+    file_name = '{}{}{}'.format("block_", str(store.node.height), ".json")
+
+    block_f = {
+        'header': block.block_header.header,
+        'hash': block.block_hash
+    }
+
+    write_file(dir_name,file_name, block_f)  
 
 
 def send_request(host, port, method, data):
@@ -113,13 +156,12 @@ def sendHeader_send(block_hash, block_header, block_height):
             print(result)
 
     error = 0
-
     return error
 
 # Receive request
 
 
-def sendHeader_receive(data):
+def sendHeader_receive(data):  
     d = json.loads(data)
     block_hash = d['block_hash']
     block_header = d['block_header']
@@ -129,17 +171,18 @@ def sendHeader_receive(data):
 
     need_getBlocks = False
 
+    if verify_shorter(block_height):
+        # drop and triger sendHeader back
+        error = 1
+        return error    
     if verify_height(block_height):
         need_getBlocks = True
-
     if verify_prev_block(prev_block):
         need_getBlocks = True
-
     if verify_hash(block_hash, block_header):
         # 只是本人 hash 值不對，感覺可以直接 drop 掉
         error = 1
         return error
-
     if need_getBlocks:
         cur_height = store.node.height
         cur_hash = store.node.chain[cur_height].block_hash
@@ -147,21 +190,13 @@ def sendHeader_receive(data):
         hash_begin = cur_hash
         hash_stop = block_hash
         # FIXME: 這邊要改
-        result = getBlocks_send(hash_count, hash_begin, hash_stop)
-
-        # check if reult[0] == hash_begin(current header)
-
-        # for header in result[1:]:
-        #     prev_block, target, nonce = header_to_items(header)
-        #     new_block = Block(prev_block, target, nonce)
-        #     _add_new_block(new_block)
+        getBlocks_send(hash_count, hash_begin, hash_stop)
 
     else:
         new_block = Block(prev_block, target, nonce)
         _add_new_block(new_block)
 
     error = 0
-
     return error
 
 # Send request
@@ -180,10 +215,10 @@ def getBlocks_send(hash_count, hash_begin, hash_stop):
         if is_connected(n_host, n_port):
             send_request(n_host, n_port, 'getBlocks', d)
 
-    # TODO: 目前 result 是直接取較長的
+    # #TODO: 目前 result 是直接取較長的
     # if len(result) > 1:
     #     result = max(result[0], result[1])
-    # TODO: Error handling & 判斷
+    # #TODO: Error handling & 判斷
     # error = 0
 
     # return error, result
@@ -193,7 +228,6 @@ def getBlocks_send(hash_count, hash_begin, hash_stop):
 
 def getBlocks_receive(data):
     d = json.loads(data)
-
     if 'result' in d:
         if len(result) > 1:
             result = max(result[0], result[1])
@@ -203,7 +237,6 @@ def getBlocks_receive(data):
             _add_new_block(new_block)
         error = 0
     else:
-
         hash_count = d['hash_count']
         hash_begin = d['hash_begin']
         hash_stop = d['hash_stop']
@@ -230,7 +263,6 @@ def getBlocks_receive(data):
         # 如果找不到結果就回傳錯誤
         if len(result) == 0:
             error = 1
-
     return error, result
 
 # user_port
