@@ -97,10 +97,10 @@ class Message:
     def _create_response_json_content(self):
         method = self.request.get("method")
         data = self.request.get("value")
-        host = self.addr[0]
-        port = self.addr[1]
+        # host = self.addr[0]
+        # port = self.addr[1]
         error = 0
-        print("!!!!!!!!!!")
+        # print("!!!!!!!!!!")
 
         if method == "sendHeader":
             node = self.request.get("node")
@@ -113,8 +113,6 @@ class Message:
                 print("ok!")
             elif node == 2777:
                 self.addr = ('127.0.0.1', 2777)
-            # print("data")
-            # print(data)
             error = api.sendHeader_receive(data)
             # error = 0
             content = {"error": error}

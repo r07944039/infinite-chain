@@ -1,6 +1,7 @@
 # import subprocess
 import socket
 import json
+import hashlib
 
 from block.block import Block
 from store import debug
@@ -121,8 +122,6 @@ def sendHeader_send(block_hash, block_header, block_height):
 
 def sendHeader_receive(data):
     d = json.loads(data)
-    print("asd")
-    print(data)
     block_hash = d['block_hash']
     block_header = d['block_header']
     block_height = d['block_height']
@@ -137,7 +136,7 @@ def sendHeader_receive(data):
     if verify_prev_block(prev_block):
         need_getBlocks = True
 
-    if verify_hash(block_header):
+    if verify_hash(block_hash, block_header):
         # 只是本人 hash 值不對，感覺可以直接 drop 掉
         error = 1
         return error
@@ -174,6 +173,7 @@ def getBlocks_send(hash_count, hash_begin, hash_stop):
         'hash_begin': hash_begin,
         'hash_stop': hash_stop
     })
+    result = []
     for neighbor in store.neighbor_list:
         n_host = neighbor['ip']
         n_port = neighbor['p2p_port']
@@ -181,7 +181,8 @@ def getBlocks_send(hash_count, hash_begin, hash_stop):
             result.append(send_request(n_host, n_port, 'getBlocks', d))
 
     # TODO: 目前 result 是直接取較長的
-    result = max(result[0], result[1])
+    if len(result) > 1:
+        result = max(result[0], result[1])
     # TODO: Error handling & 判斷
     error = 0
 
