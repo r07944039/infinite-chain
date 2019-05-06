@@ -34,9 +34,7 @@ class Server:
         if packet:
             data = api.unpack(packet)
             print(data)
-            # print('echoing', repr(data), 'to', conn)
-            # 開 thread 去 handle
-            threading.Thread(target=self.apir.router, args=(conn, data))
+            threading.Thread(target=self.apir.router, args=(conn, data,)).start()
         else:
             # print('closing', conn)
             self.sel.unregister(conn)
@@ -65,16 +63,8 @@ class Server:
     # loop through all online neighbor and call callback function
     def broadcast(self, callback):
         for n in self.neighbors:
-          print("broadcast: ", n.online, n.p2p_sock)
           if n.online == True and self.name == P2P and n.p2p_sock != None:
-            print("inside")
-            try:
-              threading.Thread(target=callback, args=(n.p2p_sock,)).start()
-            except socket.error as err:
-              # DEBUG
-              print(self.name + " offline: ", n.host, n.p2p_port, ": ", err)
-              # n.p2p_sock.close()
-              n.online = False
+            threading.Thread(target=callback, args=(n,)).start()
     
     def try_neighbors_sock(self):
       for n in self.neighbors:
