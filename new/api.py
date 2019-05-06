@@ -40,7 +40,7 @@ class Response:
         # don't close sock
     
     def router(self, sock, data):
-        print('recv:', data)
+        # print('recv:', data)
         if data['method'] == 'hello':
             self.echo(sock, data)
         else:
