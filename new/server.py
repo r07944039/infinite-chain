@@ -20,7 +20,7 @@ class Server:
         for n in globs.NEIGHBORS: # Add other neighbors
             if n.p2p_port != port and n.user_port != port:
                 self.neighbors.append(n)
-        self.buffer_size = 1024
+        self.buffer_size = 4096
         # 這不用 thread 在 test connection 還是會被 block 住
         # threading.Thread(target=self.try_neighbors_sock).start()
         # time.sleep(3)
@@ -30,7 +30,7 @@ class Server:
         threading.Thread(target=self.retry_neighbors).start()
         self.node = node
 
-    def handler(self, conn, mask):
+    def accept_handler(self, conn, mask):
         packet = conn.recv(self.buffer_size)  # Should be ready
         if packet:
             data = api.unpack(packet)
@@ -44,7 +44,7 @@ class Server:
         conn, addr = sock.accept()  # Should be ready
         # print('accepted', conn, 'from', addr)
         conn.setblocking(False)
-        self.sel.register(conn, selectors.EVENT_READ, self.handler)
+        self.sel.register(conn, selectors.EVENT_READ, self.accept_handler)
 
     def listen(self):
       lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -60,16 +60,42 @@ class Server:
             callback = key.data
             callback(key.fileobj, mask)
     
+    def __sock_broadcast_hanlder(self, callback, n, arg):
+      try:
+        callback(n, arg)
+      except socket.error as err:
+        # DEBUG
+        print("new offline: ", n.host, n.p2p_port, ": ", err)
+        n.p2p_sock = None
+        n.online = False
+    
+    def __sock_send_to_hanlder(self, callback, n, arg):
+      try:
+        callback(n, arg)
+      except socket.error as err:
+        # DEBUG
+        print("new offline: ", n.host, n.user_port, ": ", err)
+        n.user_sock = None
+        n.online = False
+
     # loop through all online neighbor and call callback function
     def broadcast(self, callback, arg):
-        for n in self.neighbors:
-          if n.online == True and self.name == P2P and n.p2p_sock != None:
-            threading.Thread(target=callback, args=(n, arg,)).start()
+      for n in self.neighbors:
+        if n.online == True and self.name == P2P and n.p2p_sock != None:
+          threading.Thread(
+            target=self.__sock_broadcast_hanlder,
+            args=(callback, n, arg,)
+          ).start()
     
-    # def send_to(self, callback, host, port, arg):
-    #   for n in self.neighbors:
-    #     if n.host == host and n.user_port == port and n.user_sock != None:
-    #       threading.Thread(target=callback, args=(n, arg,)).start()
+    def send_to(self, callback, host, port, arg):
+      for n in self.neighbors:
+        if (n.online == True and self.name == USER
+        and n.host == host and n.user_port == port
+        and n.user_sock != None):
+          threading.Thread(
+            target=self.__sock_send_to_hanlder,
+            args=(callback, n, arg,)
+          ).start()
       
     
     def try_neighbors_sock(self):

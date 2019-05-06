@@ -87,37 +87,25 @@ class Broadcast:
     #                 return error
 
     def getBlockCount(self, n, arg):
-        try:
-            n.p2p_sock.settimeout(5)
-            n.p2p_sock.send(pack(
-                'sendBlockCount'
-            ))
-            recv = n.p2p_sock.recv(4096)
-            if recv:
-                print(unpack(recv))
-        except socket.error as err:
-            # DEBUG
-            print("offline: ", n.host, n.p2p_port, ": ", err)
-            n.p2p_sock = None
-            n.online = False
+        n.p2p_sock.settimeout(5)
+        n.p2p_sock.send(pack(
+            'sendBlockCount'
+        ))
+        recv = n.p2p_sock.recv(4096)
+        if recv:
+            print(unpack(recv))
 
     
     # n is a online neighbor
     def hello(self, n, arg):
-        try:
-            n.p2p_sock.settimeout(5)
-            n.p2p_sock.send(pack(
-                "hello",
-                "hello from " + str(self.s.port)
-            ))
-            recv = n.p2p_sock.recv(1024)
-            if recv:
-                print(unpack(recv))
-        except socket.error as err:
-            # DEBUG
-            print(" offline: ", n.host, n.p2p_port, ": ", err)
-            n.p2p_sock = None
-            n.online = False
+        n.p2p_sock.settimeout(5)
+        n.p2p_sock.send(pack(
+            "hello",
+            "hello from " + str(self.s.port)
+        ))
+        recv = n.p2p_sock.recv(1024)
+        if recv:
+            print(unpack(recv))
 
 class Response:
     def __init__(self, server):
