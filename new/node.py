@@ -14,9 +14,9 @@ class Node():
         self.height = 0
         self.lock = threading.Lock()
 
-    def add_new_block(self, prev_block, target, nonce):
+    def add_new_block(self, block):
         self.lock.acquire()
-        block = Block(prev_block, target, nonce)
+        self.chain.append(block)
         self.height += 1
         self.lock.release()
 
