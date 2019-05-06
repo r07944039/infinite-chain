@@ -10,17 +10,8 @@ def sha256(data):
     m.update(data.encode('utf-8'))
     return m.hexdigest()
 
-def pack(method, data):
-    d = json.dumps({
-        "method": method,
-        "data": data,
-    })
-    return pickle.dumps(d)
-
-def pack_no_data(method):
-    d = json.dumps({
-        "method": method
-    })
+def _pack(data):
+    d = json.dumps(data)
     return pickle.dumps(d)
 
 def unpack(packet):
@@ -81,10 +72,10 @@ class Broadcast:
             'block_height': block_height
         })
         n.p2p_sock.settimeout(5)
-        req = pack(
-            "sendHeader",
-            d
-        )
+        req = _pack({
+            'method': 'sendHeader',
+            'data': d
+        })
         print(req)
         n.p2p_sock.send(req)
         recv = n.p2p_sock.recv(1024)
@@ -99,7 +90,10 @@ class Broadcast:
             'hash_begin': arg['hash_begin'],
             'hash_stop': arg['hash_stop']
         })
-        req = pack('getBlocks', d)
+        req = _pack({
+            'method': 'getBlocks',
+            'data': d
+        })
         print(req)
         n.p2p_sock.send(req)
         recv = n.p2p_sock.recv(1024)
@@ -117,10 +111,10 @@ class Broadcast:
     # n is a online neighbor
     def hello(self, n, arg):
         n.p2p_sock.settimeout(5)
-        n.p2p_sock.send(pack(
-            "hello",
-            "hello from " + str(self.s.port)
-        ))
+        # n.p2p_sock.send(_pack({
+        #     "method": "hello"
+        #     "data": "hello from " + str(self.s.port)
+        # }))
         recv = n.p2p_sock.recv(1024)
         if recv:
             print(unpack(recv))
@@ -170,7 +164,7 @@ class Response:
         res = {
             'error': error
         }
-        sock.send(pack('sendHeader', res))
+        sock.send(_pack(res))
 
     def getBlocks(self, sock, data):
         hash_count = data['hash_count']
@@ -206,7 +200,10 @@ class Response:
             'result': result,
             'error': error
         }
-        sock.send(pack('getBlocks', res))
+        sock.send(_pack({
+            'method': 'getBlocks',
+            'data': res
+        }))
 
     def getBlockCount(self, sock):
         height = self.s.node.get_height()
@@ -218,10 +215,14 @@ class Response:
             'result': result,
             'error': error
         }
-        sock.send(pack('getBlockCount', res))
+        sock.send(_pack({
+            'method': 'getBlockCount',
+            'data': res
+        }))
     
     def echo(self, sock, data):
-        sock.send(pack('', str(self.s.port)))
+        print('echo')
+        # sock.send(_pack('', str(self.s.port)))
         # don't close sock
     
     def router(self, sock, query):
@@ -247,9 +248,9 @@ class SendTo:
 
     def getBlockCount(self, n, arg):
         n.p2p_sock.settimeout(5)
-        n.p2p_sock.send(pack_no_data(
-            'sendBlockCount'
-        ))
+        n.p2p_sock.send(_pack({
+            'method': 'getBlockCount'
+        }))
         recv = n.p2p_sock.recv(1024)
         if recv:
             print(unpack(recv))
