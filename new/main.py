@@ -32,8 +32,8 @@ print(globs.NEIGHBORS.append)
 
 
 def main():
-  s1 = server.Server(HOST, config['p2p_port'])
-  s2 = server.Server(HOST, config['user_port'])
+  s1 = server.Server(HOST, config['p2p_port'], 'p2p')
+  s2 = server.Server(HOST, config['user_port'], 'user')
   t1 = threading.Thread(target=s1.listen)
   t2 = threading.Thread(target=s2.listen)
   t1.start()

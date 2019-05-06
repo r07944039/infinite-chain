@@ -7,8 +7,12 @@ import neighbor
 import globs
 import api
 
+P2P = 'p2p'
+USER = 'user'
+
 class Server:
-    def __init__(self, host, port):
+    def __init__(self, host, port, name):
+        self.name = name
         self.host = host
         self.port = port
         self.sel = selectors.DefaultSelector()
@@ -67,8 +71,8 @@ class Server:
               except socket.error as err:
                 # DEBUG
                 print(str(self.port) + " port: offline: ", n.host, n.p2p_port, n.user_port, ": ", err)
-                n.p2p_sock.close()
-                n.user_sock.close()
+                # n.p2p_sock.close()
+                # n.user_sock.close()
                 n.online = False
     
     def retry_neighbors(self):
@@ -76,21 +80,23 @@ class Server:
         # Try to connect with offline neighbors
         for n in self.neighbors:
           if n.online == False:
+            port = 0
+            if self.name == P2P:
+                port = n.p2p_port
+            elif self.name == USER:
+                port = n.user_port
             try:
-              s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-              s1.settimeout(10)
-              s1.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-              s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-              s2.settimeout(10)
-              s2.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-              s1.connect((n.host, n.p2p_port))
-              s2.connect((n.host, n.user_port))
-              n.online = True
-              n.p2p_sock = s1
-              n.user_sock = s2
-              print(str(self.port) + " port: online: ", n.host, n.p2p_port, n.user_port)
+              s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+              s.settimeout(2)
+              s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+              s.connect((n.host, port))
             except socket.error as err:
-              # print("retry: " + n.host + ":" + str(n.p2p_port), ": ", err)
-              pass
+              print(self.name + ": retry: " + n.host + ":" + str(port), ": ", err)
+              continue
+              # if alive
+              n.online = True
+              n.p2p_sock = s
+              n.user_sock = s
+              print(str(self.port) + " port: online: ", n.host, n.p2p_port, n.user_port)
         self.broadcast(self.apib.hello)
         time.sleep(globs.HEALTH_CHECK_INTERVAL)
