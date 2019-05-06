@@ -200,10 +200,7 @@ class Response:
             'result': result,
             'error': error
         }
-        sock.send(_pack({
-            'method': 'getBlocks',
-            'data': res
-        }))
+        sock.send(_pack(res))
 
     def getBlockCount(self, sock):
         height = self.s.node.get_height()
@@ -215,10 +212,23 @@ class Response:
             'result': result,
             'error': error
         }
-        sock.send(_pack({
-            'method': 'getBlockCount',
-            'data': res
-        }))
+        sock.send(_pack(res))
+
+    def getBlockHash(self, sock, data):
+        height = data['block_height']
+        if height > self.s.node.get_height():
+            error = 1
+            result = ""
+        else:
+            error = 0
+            chain = self.s.node.get_chain()
+            result = chain[height]
+        res = {
+            'error': error,
+            'result': result
+        }
+
+        sock.send(_pack(res))
     
     def echo(self, sock, data):
         print('echo')
@@ -236,6 +246,8 @@ class Response:
             self.getBlocks(sock, data)
         elif method == 'getBlockCount':
             self.getBlockCount(sock)
+        elif method == 'getBlockHash':
+            self.getBlockHash(sock, data)
         elif method == 'hello':
             self.echo(sock, data)
         else:
@@ -247,12 +259,23 @@ class SendTo:
         self.s = server
 
     def getBlockCount(self, n, arg):
-        n.p2p_sock.settimeout(5)
-        n.p2p_sock.send(_pack({
+        n.user_sock.settimeout(5)
+        n.user_sock.send(_pack({
             'method': 'getBlockCount'
         }))
         recv = n.p2p_sock.recv(1024)
         if recv:
             print(unpack(recv))
 
+    def getBlockHash(self, n, arg):
+        n.user_sock.settimeout(5)
+        n.user_sock.send(_pack({
+            'method': 'getBlockHash',
+            'data': {
+                'block_height': self.s.node.get_height()
+            }
+        }))
+        recv = n.p2p_sock.recv(1024)
+        if recv:
+            print(unpack(recv))
     
