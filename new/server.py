@@ -34,7 +34,7 @@ class Server:
       for n in self.neighbors:
         if n.online == True and self.name == P2P and n.p2p_sock != None:
           threading.Thread(
-            target=self.__sock_broadcast_hanlder,
+            target=self.__sock_broadcast_handler,
             args=(callback, n, arg,)
           ).start()
     
@@ -44,7 +44,7 @@ class Server:
         and n.host == host and n.user_port == port
         and n.user_sock != None):
           threading.Thread(
-            target=self.__sock_send_to_hanlder,
+            target=self.__sock_send_to_handler,
             args=(callback, n, arg,)
           ).start()
     
@@ -78,7 +78,7 @@ class Server:
         conn.setblocking(False)
         self.sel.register(conn, selectors.EVENT_READ, self.__accept_handler)
     
-    def __sock_broadcast_hanlder(self, callback, n, arg):
+    def __sock_broadcast_handler(self, callback, n, arg):
       try:
         callback(n, arg)
       except socket.error as err:
@@ -87,7 +87,7 @@ class Server:
         n.p2p_sock = None
         n.online = False
     
-    def __sock_send_to_hanlder(self, callback, n, arg):
+    def __sock_send_to_handler(self, callback, n, arg):
       try:
         callback(n, arg)
       except socket.error as err:
