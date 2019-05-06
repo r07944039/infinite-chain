@@ -27,58 +27,9 @@ class Server:
         self.apib = api.Broadcast(self)
         self.apir = api.Response(self)
         # keep pinging neighbors
-        threading.Thread(target=self.retry_neighbors).start()
+        threading.Thread(target=self.__retry_neighbors).start()
         self.node = node
-
-    def accept_handler(self, conn, mask):
-        packet = conn.recv(self.buffer_size)  # Should be ready
-        if packet:
-            data = api.unpack(packet)
-            threading.Thread(target=self.apir.router, args=(conn, data,)).start()
-        else:
-            # print('closing', conn)
-            self.sel.unregister(conn)
-            conn.close()
-
-    def accept(self, sock, mask):
-        conn, addr = sock.accept()  # Should be ready
-        # print('accepted', conn, 'from', addr)
-        conn.setblocking(False)
-        self.sel.register(conn, selectors.EVENT_READ, self.accept_handler)
-
-    def listen(self):
-      lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      lsock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-      lsock.bind((self.host, self.port))
-      lsock.listen(10)
-      print('listening on', (self.host, self.port))
-      lsock.setblocking(False)
-      self.sel.register(lsock, selectors.EVENT_READ, self.accept)
-      while True:
-        events = self.sel.select()
-        for key, mask in events:
-            callback = key.data
-            callback(key.fileobj, mask)
-    
-    def __sock_broadcast_hanlder(self, callback, n, arg):
-      try:
-        callback(n, arg)
-      except socket.error as err:
-        # DEBUG
-        print("new offline: ", n.host, n.p2p_port, ": ", err)
-        n.p2p_sock = None
-        n.online = False
-    
-    def __sock_send_to_hanlder(self, callback, n, arg):
-      try:
-        callback(n, arg)
-      except socket.error as err:
-        # DEBUG
-        print("new offline: ", n.host, n.user_port, ": ", err)
-        n.user_sock = None
-        n.online = False
-
-    # loop through all online neighbor and call callback function
+        # loop through all online neighbor and call callback function
     def broadcast(self, callback, arg):
       for n in self.neighbors:
         if n.online == True and self.name == P2P and n.p2p_sock != None:
@@ -96,20 +47,67 @@ class Server:
             target=self.__sock_send_to_hanlder,
             args=(callback, n, arg,)
           ).start()
-      
     
-    def try_neighbors_sock(self):
+    def listen(self):
+      lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      lsock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+      lsock.bind((self.host, self.port))
+      lsock.listen(10)
+      print('listening on', (self.host, self.port))
+      lsock.setblocking(False)
+      self.sel.register(lsock, selectors.EVENT_READ, self.__accept)
+      while True:
+        events = self.sel.select()
+        for key, mask in events:
+            callback = key.data
+            callback(key.fileobj, mask)
+
+    def __accept_handler(self, conn, mask):
+        packet = conn.recv(self.buffer_size)  # Should be ready
+        if packet:
+            data = api.unpack(packet)
+            threading.Thread(target=self.apir.router, args=(conn, data,)).start()
+        else:
+            # print('closing', conn)
+            self.sel.unregister(conn)
+            conn.close()
+
+    def __accept(self, sock, mask):
+        conn, addr = sock.accept()  # Should be ready
+        # print('accepted', conn, 'from', addr)
+        conn.setblocking(False)
+        self.sel.register(conn, selectors.EVENT_READ, self.__accept_handler)
+    
+    def __sock_broadcast_hanlder(self, callback, n, arg):
+      try:
+        callback(n, arg)
+      except socket.error as err:
+        # DEBUG
+        print("offline: ", n.host, n.p2p_port, ": ", err)
+        n.p2p_sock = None
+        n.online = False
+    
+    def __sock_send_to_hanlder(self, callback, n, arg):
+      try:
+        callback(n, arg)
+      except socket.error as err:
+        # DEBUG
+        print("offline: ", n.host, n.user_port, ": ", err)
+        n.user_sock = None
+        n.online = False
+    
+    def __try_neighbors_sock(self):
       for n in self.neighbors:
         if self.name == P2P and n.p2p_sock == None:
-          n.p2p_sock = self.try_p2p(n)
+          n.p2p_sock = self.__try_p2p(n)
           # print(self.name + ": check online: ", n.host, n.p2p_sock)
         elif self.name == USER and n.user_sock == None:
-          n.user_sock = self.try_user(n)
+          n.user_sock = self.__try_user(n)
           # print(self.name + ": check online: ", n.host, n.user_sock)
         if n.p2p_sock != None or n.user_sock != None:
           n.online = True
     
-    def try_p2p(self, n):
+    def __try_p2p(self, n):
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       s.settimeout(5)
       s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -120,7 +118,7 @@ class Server:
         return None
       return s
     
-    def try_user(self, n):
+    def __try_user(self, n):
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       s.settimeout(5)
       s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -131,8 +129,8 @@ class Server:
         return None
       return s
 
-    def retry_neighbors(self):
+    def __retry_neighbors(self):
       while True:
         # Try to connect with offline neighbors
-        self.try_neighbors_sock()
+        self.__try_neighbors_sock()
         time.sleep(globs.HEALTH_CHECK_INTERVAL)
