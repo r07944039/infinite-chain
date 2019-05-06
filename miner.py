@@ -19,8 +19,9 @@ class Miner:
         self.node = node
 
     def mining(self):
-        height = self.node.height
-        block = self.node.chain[height]
+        height = self.node.get_height()
+        chain = self.node.get_chain()
+        block = chain[height]
         header = block.block_header
         pre_string = header.version + block.block_hash + \
             header.merkle_root + header.target
