@@ -60,11 +60,23 @@ class Server:
             callback = key.data
             callback(key.fileobj, mask)
     
+    def broadcast_hanlder(self, callback, n, arg):
+      try:
+        callback(n, arg)
+      except socket.error as err:
+        # DEBUG
+        print("new offline: ", n.host, n.p2p_port, ": ", err)
+        n.p2p_sock = None
+        n.online = False
+
     # loop through all online neighbor and call callback function
     def broadcast(self, callback, arg):
         for n in self.neighbors:
           if n.online == True and self.name == P2P and n.p2p_sock != None:
-            threading.Thread(target=callback, args=(n, arg,)).start()
+            threading.Thread(
+              target=self.broadcast_hanlder,
+              args=(callback, n, arg,)
+            ).start()
     
     # def send_to(self, callback, host, port, arg):
     #   for n in self.neighbors:
