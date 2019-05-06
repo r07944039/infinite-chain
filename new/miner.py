@@ -3,6 +3,7 @@ import hashlib
 import os
 
 from block.block import Block
+import api
 
 def sha256(data):
     m = hashlib.sha256()
@@ -42,6 +43,13 @@ class Miner:
         # Boardcast new block to network
         # sendHeader_send(new_block.block_hash,
         #                 new_block.block_header.header, height)
+        arg = {
+            'block_hash': new_block.block_hash,
+            'block_header': new_block.block_header.header, 
+            'block_height': height
+        }
+        self.p2p.broadcast(self.p2p.apib.sendHeader, arg)
+
         print(nonce)
         return nonce
 

@@ -20,4 +20,14 @@ class Node():
         self.height += 1
         self.lock.release()
 
-# node = Node()
+    def get_chain(self):
+        self.lock.acquire()
+        chain = self.chain
+        self.lock.release()
+        return chain
+
+    def get_height(self):
+        self.lock.acquire()
+        height = self.height
+        self.lock.release()
+        return height
