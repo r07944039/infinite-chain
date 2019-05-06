@@ -2,8 +2,10 @@ import threading
 import server
 import argparse
 import json
+import time
 import globs
 import neighbor
+import miner
 
 
 # set flags
@@ -38,5 +40,9 @@ def main():
   t2 = threading.Thread(target=s2.listen)
   t1.start()
   t2.start()
+  time.sleep(5) # Wait for socket connection
+  m = miner.Miner('miner', s1, s2)
+  t3 = threading.Thread(target=m.mine)
+  t3.start()
 
 main()

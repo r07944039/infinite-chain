@@ -21,13 +21,13 @@ class Server:
             if n.p2p_port != port and n.user_port != port:
                 self.neighbors.append(n)
         self.buffer_size = 1024
-        # keep pinging neighbors
-        threading.Thread(target=self.retry_neighbors).start()
-        # threading.Thread(target=self.retry_neighbors).start()
-        # threading.Thread(target=self.retry_neighbors).start()
-        # threading.Thread(target=self.retry_neighbors).start()
+        # 這不用 thread 在 test connection 還是會被 block 住
+        # threading.Thread(target=self.try_neighbors_sock).start()
+        # time.sleep(3)
         self.apib = api.Broadcast(self)
         self.apir = api.Response(self)
+        # keep pinging neighbors
+        threading.Thread(target=self.retry_neighbors).start()
 
     def handler(self, conn, mask):
         packet = conn.recv(self.buffer_size)  # Should be ready
@@ -64,39 +64,54 @@ class Server:
     
     # loop through all online neighbor and call callback function
     def broadcast(self, callback):
-          for n in self.neighbors:
-            if n.online == True:
-              try:
-                callback(n)
-              except socket.error as err:
-                # DEBUG
-                print(str(self.port) + " port: offline: ", n.host, n.p2p_port, n.user_port, ": ", err)
-                # n.p2p_sock.close()
-                # n.user_sock.close()
-                n.online = False
+        for n in self.neighbors:
+          print("broadcast: ", n.online, n.p2p_sock)
+          if n.online == True and self.name == P2P and n.p2p_sock != None:
+            print("inside")
+            try:
+              threading.Thread(target=callback, args=(n.p2p_sock)).start()
+            except socket.error as err:
+              # DEBUG
+              print(self.name + " offline: ", n.host, n.p2p_port, ": ", err)
+              # n.p2p_sock.close()
+              n.online = False
     
+    def try_neighbors_sock(self):
+      for n in self.neighbors:
+        if self.name == P2P and n.p2p_sock == None:
+          print(self.name + ": try: ", n.host, n.p2p_sock)
+          n.p2p_sock = self.try_p2p(n)
+          print(self.name + ": online: ", n.host, n.p2p_sock)
+        elif self.name == USER and n.user_sock == None:
+          n.user_sock = self.try_user(n)
+          print(self.name + ": online: ", n.host, n.user_sock)
+        if n.p2p_sock != None or n.user_sock != None:
+          n.online = True
+    
+    def try_p2p(self, n):
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      s.settimeout(5)
+      s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+      try:
+        s.connect((n.host, n.p2p_port))
+      except socket.error as err:
+        print(self.name + ": retry: " + n.host + ":" + str(n.p2p_port), ": ", err)
+        return None
+      return s
+    
+    def try_user(self, n):
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      s.settimeout(5)
+      s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+      try:
+        s.connect((n.host, n.user_port))
+      except socket.error as err:
+        print(self.name + ": retry: " + n.host + ":" + str(n.user_port), ": ", err)
+        return None
+      return s
+
     def retry_neighbors(self):
       while True:
         # Try to connect with offline neighbors
-        for n in self.neighbors:
-          if n.online == False:
-            port = 0
-            if self.name == P2P:
-                port = n.p2p_port
-            elif self.name == USER:
-                port = n.user_port
-            try:
-              s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-              s.settimeout(2)
-              s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-              s.connect((n.host, port))
-            except socket.error as err:
-              print(self.name + ": retry: " + n.host + ":" + str(port), ": ", err)
-              continue
-              # if alive
-              n.online = True
-              n.p2p_sock = s
-              n.user_sock = s
-              print(str(self.port) + " port: online: ", n.host, n.p2p_port, n.user_port)
-        self.broadcast(self.apib.hello)
+        self.try_neighbors_sock()
         time.sleep(globs.HEALTH_CHECK_INTERVAL)

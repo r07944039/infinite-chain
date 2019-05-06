@@ -14,12 +14,12 @@ class Broadcast:
         self.s = server
     
     # n is a online neighbor
-    def hello(self, n):
-        n.user_sock.send(pack(
+    def hello(self, p2p_sock):
+        p2p_sock.send(pack(
             "hello",
             "hello from " + str(self.s.port)
         ))
-        recv = n.user_sock.recv(1024)
+        recv = p2p_sock.recv(1024)
         if recv:
             print(unpack(recv))
 
