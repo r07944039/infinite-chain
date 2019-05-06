@@ -20,7 +20,7 @@ class Server:
         for n in globs.NEIGHBORS: # Add other neighbors
             if n.p2p_port != port and n.user_port != port:
                 self.neighbors.append(n)
-        self.buffer_size = 4096
+        self.buffer_size = globs.DEFAULT_SOCK_BUFFER_SIZE
         # 這不用 thread 在 test connection 還是會被 block 住
         # threading.Thread(target=self.try_neighbors_sock).start()
         # time.sleep(3)
@@ -52,7 +52,7 @@ class Server:
       lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       lsock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
       lsock.bind((self.host, self.port))
-      lsock.listen(10)
+      lsock.listen(globs.BACKLOG_SIZE)
       print('listening on', (self.host, self.port))
       lsock.setblocking(False)
       self.sel.register(lsock, selectors.EVENT_READ, self.__accept)
@@ -109,7 +109,7 @@ class Server:
     
     def __try_p2p(self, n):
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      s.settimeout(5)
+      s.settimeout(globs.RETRY_TIMEOUT)
       s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
       try:
         s.connect((n.host, n.p2p_port))
@@ -120,7 +120,7 @@ class Server:
     
     def __try_user(self, n):
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      s.settimeout(5)
+      s.settimeout(globs.RETRY_TIMEOUT)
       s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
       try:
         s.connect((n.host, n.user_port))

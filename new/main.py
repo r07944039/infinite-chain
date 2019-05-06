@@ -43,7 +43,7 @@ def main():
   t2 = threading.Thread(target=s2.listen)
   t1.start()
   t2.start()
-  time.sleep(5) # Wait for socket connection
+  time.sleep(globs.WAIT_SECONDS_BEFORE_MINER) # Wait for socket connection
   m = miner.Miner('miner', s1, s2, node)
   t3 = threading.Thread(target=m.mine)
   t3.start()
