@@ -123,7 +123,7 @@ class Broadcast:
         sock.close()
         if recv:
             r = unpack(recv)
-            result = r['data']['result']
+            result = r['result']
             if len(result) > 1:
                 result = max(result[0], result[1])
                 for header in result[1:]:
@@ -314,8 +314,6 @@ class Response:
             pass
 
 # For user_port
-
-
 class SendTo:
     def __init__(self, server):
         self.s = server
@@ -333,28 +331,34 @@ class SendTo:
             print(unpack(recv))
 
     def getBlockHash(self, n, arg):
-        n.user_sock.settimeout(5)
-        n.user_sock.send(_pack({
+        sock = create_sock(n.host, n.user_port)
+        if sock == None:
+            return
+        sock.send(_pack({
             'method': 'getBlockHash',
             'data': {
                 'block_height': arg['block_height']
             }
         }))
-
-        recv = n.p2p_sock.recv(1024)
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
         if recv:
             print(unpack(recv))
 
     def getBlockHeader(self, n, arg):
         height = self.s.node.get_height()
         chain = self.s.node.get_chain()
-        n.user_sock.settimeout(5)
-        n.user_sock.send(_pack({
+
+        sock = create_sock(n.host, n.user_port)
+        if sock == None:
+            return
+        sock.send(_pack({
             'method': 'getBlockHeader',
             'data': {
                 'block_hash': chain[height].block_hash
             }
         }))
-        recv = n.p2p_sock.recv(1024)
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
         if recv:
             print(unpack(recv))
