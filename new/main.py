@@ -6,7 +6,6 @@ import time
 import globs
 import neighbor
 import miner
-import db
 
 
 # set flags
@@ -35,15 +34,14 @@ print(globs.NEIGHBORS.append)
 
 
 def main():
-  localdb = db.DB({})
-  s1 = server.Server(HOST, config['p2p_port'], 'p2p', localdb)
-  s2 = server.Server(HOST, config['user_port'], 'user', localdb)
+  s1 = server.Server(HOST, config['p2p_port'], 'p2p')
+  s2 = server.Server(HOST, config['user_port'], 'user')
   t1 = threading.Thread(target=s1.listen)
   t2 = threading.Thread(target=s2.listen)
   t1.start()
   t2.start()
   time.sleep(5) # Wait for socket connection
-  m = miner.Miner('miner', s1, s2, localdb)
+  m = miner.Miner('miner', s1, s2)
   t3 = threading.Thread(target=m.mine)
   t3.start()
 

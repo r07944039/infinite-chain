@@ -1,11 +1,10 @@
 import time
 
 class Miner:
-  def __init__(self, name, p2pserver, userserver, db):
+  def __init__(self, name, p2pserver, userserver):
     self.name = name
     self.p2p = p2pserver
     self.user = userserver
-    self.db = db
   
   def mine(self):
     while True:
