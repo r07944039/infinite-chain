@@ -20,7 +20,7 @@ class Server:
         for n in globs.NEIGHBORS: # Add other neighbors
             if n.p2p_port != port and n.user_port != port:
                 self.neighbors.append(n)
-        self.buffer_size = 1024
+        self.buffer_size = 4096
         # 這不用 thread 在 test connection 還是會被 block 住
         # threading.Thread(target=self.try_neighbors_sock).start()
         # time.sleep(3)
