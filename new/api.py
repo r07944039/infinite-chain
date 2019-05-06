@@ -10,10 +10,16 @@ def sha256(data):
     m.update(data.encode('utf-8'))
     return m.hexdigest()
 
-def pack(method, value):
+def pack(method, data):
     d = json.dumps({
         "method": method,
-        "value": value,
+        "data": data,
+    })
+    return pickle.dumps(d)
+
+def pack_no_data(method):
+    d = json.dumps({
+        "method": method
     })
     return pickle.dumps(d)
 
@@ -81,7 +87,7 @@ class Broadcast:
         )
         print(req)
         n.p2p_sock.send(req)
-        recv = n.p2p_sock.recv(4096)
+        recv = n.p2p_sock.recv(1024)
         if recv:
             r = unpack(recv)
             print(r)
@@ -96,27 +102,17 @@ class Broadcast:
         req = pack('getBlocks', d)
         print(req)
         n.p2p_sock.send(req)
-        recv = n.p2p_sock.recv(4096)
+        recv = n.p2p_sock.recv(1024)
         if recv:
             r = unpack(recv)
             print("sss: ", r)
-            result = r['value']['result']
+            result = r['data']['result']
             if len(result) > 1:
                 result = max(result[0], result[1])
                 for header in result[1:]:
                     prev_block, target, nonce = _header_to_items(header)
                     new_block = Block(prev_block, target, nonce)
                     self.s.node.add_new_block(new_block)
-
-    def getBlockCount(self, n, arg):
-        n.p2p_sock.settimeout(5)
-        n.p2p_sock.send(pack(
-            'sendBlockCount'
-        ))
-        recv = n.p2p_sock.recv(4096)
-        if recv:
-            print(unpack(recv))
-
     
     # n is a online neighbor
     def hello(self, n, arg):
@@ -125,7 +121,7 @@ class Broadcast:
             "hello",
             "hello from " + str(self.s.port)
         ))
-        recv = n.p2p_sock.recv(4096)
+        recv = n.p2p_sock.recv(1024)
         if recv:
             print(unpack(recv))
 
@@ -212,20 +208,50 @@ class Response:
         }
         sock.send(pack('getBlocks', res))
 
-
+    def getBlockCount(self, sock):
+        height = self.s.node.get_height()
+        if height == 0:
+            error = 1
+        else:
+            error = 0
+        res = {
+            'result': result,
+            'error': error
+        }
+        sock.send(pack('getBlockCount', res))
     
     def echo(self, sock, data):
         sock.send(pack('', str(self.s.port)))
         # don't close sock
     
-    def router(self, sock, data):
+    def router(self, sock, query):
         # print('recv:', data)
-        value = json.loads(data['value'])
-        if data['method'] == 'sendHeader':
-            self.sendHeader(sock, value)
-        elif data['method'] == 'getBlocks':
-            self.getBlocks(sock, value)
-        elif data['method'] == 'hello':
+        method = query['method']
+        if 'data' in query:
+            data = json.loads(query['data'])
+        if method == 'sendHeader':
+            self.sendHeader(sock, data)
+        elif method == 'getBlocks':
+            self.getBlocks(sock, data)
+        elif method == 'getBlockCount':
+            self.getBlockCount(sock)
+        elif method == 'hello':
             self.echo(sock, data)
         else:
             pass
+
+# For user_port
+class SendTo:
+    def __init__(self, server):
+        self.s = server
+
+    def getBlockCount(self, n, arg):
+        n.p2p_sock.settimeout(5)
+        n.p2p_sock.send(pack_no_data(
+            'sendBlockCount'
+        ))
+        recv = n.p2p_sock.recv(1024)
+        if recv:
+            print(unpack(recv))
+
+    
