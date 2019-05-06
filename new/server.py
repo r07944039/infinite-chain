@@ -59,8 +59,8 @@ class Server:
       while True:
         events = self.sel.select()
         for key, mask in events:
-            callback = key.data
-            callback(key.fileobj, mask)
+          callback = key.data
+          callback(key.fileobj, mask)
 
     def __accept_handler(self, conn, mask):
         packet = conn.recv(self.buffer_size)  # Should be ready

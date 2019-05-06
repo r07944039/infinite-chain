@@ -2,8 +2,20 @@ import pickle
 import socket
 import hashlib
 import json
+import globs
 
 from block.block import Block
+
+def create_sock(host, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(globs.RETRY_TIMEOUT)
+    s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+    try:
+        s.connect((host, port))
+    except socket.error as err:
+        print("create_sock: " + host + ":" + str(port), ": ", err)
+        return None
+    return s
 
 def sha256(data):
     m = hashlib.sha256()
@@ -71,14 +83,17 @@ class Broadcast:
             'block_header': block_header,
             'block_height': block_height
         })
-        n.p2p_sock.settimeout(5)
         req = _pack({
             'method': 'sendHeader',
             'data': d
         })
         print(req)
-        n.p2p_sock.send(req)
-        recv = n.p2p_sock.recv(1024)
+        sock = create_sock(n.host, n.p2p_port)
+        if sock == None:
+            return
+        sock.send(req)
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
         if recv:
             r = unpack(recv)
             print(r)
@@ -94,12 +109,14 @@ class Broadcast:
             'method': 'getBlocks',
             'data': d
         })
-        print(req)
-        n.p2p_sock.send(req)
-        recv = n.p2p_sock.recv(1024)
+        sock = create_sock(n.host, n.p2p_port)
+        if sock == None:
+            return
+        sock.send(req)
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
         if recv:
             r = unpack(recv)
-            print("sss: ", r)
             result = r['data']['result']
             if len(result) > 1:
                 result = max(result[0], result[1])
@@ -110,15 +127,22 @@ class Broadcast:
     
     # n is a online neighbor
     def hello(self, n, arg):
-        n.p2p_sock.settimeout(5)
-        # n.p2p_sock.send(_pack({
-        #     "method": "hello"
-        #     "data": "hello from " + str(self.s.port)
-        # }))
-        recv = n.p2p_sock.recv(1024)
+        sock = create_sock(n.host, n.p2p_port)
+        if sock == None:
+            return
+        sock.send(_pack({
+            "method": "hello",
+            "data": "hello from " + str(self.s.port)
+        }))
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
         if recv:
             print(unpack(recv))
 
+# Response 的 sock 都不可以 sock.close()
+# 不然還沒有 send 回去 socket 就被關掉
+# 對方會收到 Connection reset by peers
+# 且對方的 recv 會一直 block 直到 timed out
 class Response:
     def __init__(self, server):
         self.s = server
@@ -157,12 +181,11 @@ class Response:
                 'hash_begin': hash_begin, 
                 'hash_stop': hash_stop
             }
-            # self.s.broadcast(self.s.apib.getBlocks, arg)
-            # error = getBlocks(hash_count, hash_begin, hash_stop)
-            
+            self.s.broadcast(self.s.apib.getBlocks, arg)
+        
         error = 0
         res = {
-            'error': error
+            'error': 0
         }
         sock.send(_pack(res))
 
@@ -247,12 +270,13 @@ class SendTo:
         self.s = server
 
     def getBlockCount(self, n, arg):
-        n.p2p_sock.settimeout(5)
-        n.p2p_sock.send(_pack({
+        sock = create_sock(n.host, n.user_port)
+        if sock == None:
+            return
+        sock.send(_pack({
             'method': 'getBlockCount'
         }))
-        recv = n.p2p_sock.recv(1024)
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
         if recv:
             print(unpack(recv))
-
-    
