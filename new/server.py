@@ -11,11 +11,12 @@ P2P = 'p2p'
 USER = 'user'
 
 class Server:
-    def __init__(self, host, port, name):
+    def __init__(self, host, port, name, db):
         self.name = name
         self.host = host
         self.port = port
         self.sel = selectors.DefaultSelector()
+        self.db = db
         self.neighbors = [] # Static neighbors list, not guaranteed to be online
         for n in globs.NEIGHBORS: # Add other neighbors
             if n.p2p_port != port and n.user_port != port:
