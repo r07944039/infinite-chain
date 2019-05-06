@@ -1,55 +1,67 @@
-#!/usr/bin/env python3
+import asyncio
+import json
 
-import sys
-import socket
-import selectors
-import traceback
-
-from store import debug
+import api
 import store
-import libserver
 
 
-class Server:
+class Server():
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.sel = selectors.DefaultSelector()
 
-    def accept_wrapper(self, sock):
-        conn, addr = sock.accept()  # Should be ready to read
-        # print("===========================================")
-        print("accepted connection from {}".format(addr))
-        conn.setblocking(False)
-        message = libserver.Message(self.sel, conn, addr)
-        self.sel.register(conn, selectors.EVENT_READ, data=message)
+    async def handle_echo(self, reader, writer):
+        data = reader.read(4096)
+        message = data.decode()
+        addr = writer.get_extra_info('peername')
+        # print(message)
+        req = json.loads(message)
+        method = req['method']
+        value = req['value']
 
-    def listen(self):
-        lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # Avoid bind() exception: OSError: [Errno 48] Address already in use
-        lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        lsock.bind((self.host, self.port))
-        lsock.listen()
-        print("listening on", (self.host, self.port))
-        lsock.setblocking(False)
-        self.sel.register(lsock, selectors.EVENT_READ, data=None)
-    
-    def select(self):
-        # debug("sel")
-        events = self.sel.select(timeout=store.select_timeout)
-        for key, mask in events:
-            if key.data is None:
-                self.accept_wrapper(key.fileobj)
+
+        if method == "sendHeader":
+            error = api.sendHeader_receive(value)
+            data = {"error": error}
+        else:
+            if method == "getBlocks":
+                error, result = api.getBlocks_receive(value)
+            elif method == "getBlockCount":
+                error, result = api.getBlockCount_receive()
+            elif method == "getBlockHash":
+                error, result = api.getBlockHash_receive(value)
+            elif method == "getBlockHeader":
+                error, result = api.getBlockHeader_receive(value)
             else:
-                message = key.data
-                try:
-                    message.process_events(mask)
-                except Exception:
-                    print(
-                        "main: error: exception for",
-                        f"{message.addr}:\n{traceback.format_exc()}",
-                    )
-                    message.close()
-        # 哪天需要再用
-        # 關掉 selector，和 fclose 很像
-        # self.sel.close()
+                error = 1
+                result = f'Error: invalid method "{method}".'
+
+            data = {"error": error, "result": result}
+
+        print(f"Received {message!r} from {addr!r}")
+
+        print(f"Send: {message!r}")
+        writer.write(data)
+        writer.drain()
+
+        print("Close the connection")
+        writer.close()
+
+    async def main(self):
+        # server = await asyncio.start_server(
+        #     self.handle_echo, self.host, self.port)
+
+        # addr = server.sockets[0].getsockname()
+        # print(f'Serving on {addr}')
+
+        # async with server:
+        # await server.serve_forever()
+        
+        server = await loop.create_server(self.handle_echo, self.host, self.port)
+        # addr = server.sockets[0].getsockname()
+
+        print(f'Serving on {self.host}:{self.port}')
+        # loop.run_until_complete(server)
+        loop.run_until_complete(asyncio.wait(server))
+
+# asyncio.run(main())

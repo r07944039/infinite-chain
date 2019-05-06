@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import asyncio
 
 from server import Server
 from node import Node
@@ -42,11 +43,22 @@ if __name__ == '__main__':
     # Init Node
     store.node = Node(store.target)
 
+    # 可以創建一個 event loop
+    loop = asyncio.get_event_loop()
+    
+    # 先註冊 server
     server_p2p = Server(host, p2p_port)
-    server_p2p.listen()
+    # server_p2p.listen()
+    # asyncio.run(server_p2p.main())
+    
 
     server_user = Server(host, user_port)
-    server_user.listen()
+    # server_user.listen()
+    # asyncio.run(server_user.main())
+
+    tasks = [
+        
+    ]
 
     node = store.node
     # Current block

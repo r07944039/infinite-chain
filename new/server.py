@@ -11,7 +11,7 @@ P2P = 'p2p'
 USER = 'user'
 
 class Server:
-    def __init__(self, host, port, name):
+    def __init__(self, host, port, name, node):
         self.name = name
         self.host = host
         self.port = port
@@ -28,12 +28,12 @@ class Server:
         self.apir = api.Response(self)
         # keep pinging neighbors
         threading.Thread(target=self.retry_neighbors).start()
+        self.node = node
 
     def handler(self, conn, mask):
         packet = conn.recv(self.buffer_size)  # Should be ready
         if packet:
             data = api.unpack(packet)
-            print(data)
             threading.Thread(target=self.apir.router, args=(conn, data,)).start()
         else:
             # print('closing', conn)
@@ -61,10 +61,16 @@ class Server:
             callback(key.fileobj, mask)
     
     # loop through all online neighbor and call callback function
-    def broadcast(self, callback):
+    def broadcast(self, callback, arg):
         for n in self.neighbors:
           if n.online == True and self.name == P2P and n.p2p_sock != None:
-            threading.Thread(target=callback, args=(n,)).start()
+            threading.Thread(target=callback, args=(n, arg,)).start()
+    
+    # def send_to(self, callback, host, port, arg):
+    #   for n in self.neighbors:
+    #     if n.host == host and n.user_port == port and n.user_sock != None:
+    #       threading.Thread(target=callback, args=(n, arg,)).start()
+      
     
     def try_neighbors_sock(self):
       for n in self.neighbors:

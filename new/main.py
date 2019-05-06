@@ -7,6 +7,8 @@ import globs
 import neighbor
 import miner
 
+from node import Node
+
 
 # set flags
 parser = argparse.ArgumentParser()
@@ -34,14 +36,15 @@ print(globs.NEIGHBORS.append)
 
 
 def main():
-  s1 = server.Server(HOST, config['p2p_port'], 'p2p')
-  s2 = server.Server(HOST, config['user_port'], 'user')
+  node = Node(config['target'])
+  s1 = server.Server(HOST, config['p2p_port'], 'p2p', node)
+  s2 = server.Server(HOST, config['user_port'], 'user', node)
   t1 = threading.Thread(target=s1.listen)
   t2 = threading.Thread(target=s2.listen)
   t1.start()
   t2.start()
   time.sleep(5) # Wait for socket connection
-  m = miner.Miner('miner', s1, s2)
+  m = miner.Miner('miner', s1, s2, node)
   t3 = threading.Thread(target=m.mine)
   t3.start()
 

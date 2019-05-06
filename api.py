@@ -105,7 +105,7 @@ def _add_new_block(block):
         'hash': block.block_hash
     }
 
-    write_file(dir_name,file_name, block_f)  
+    # write_file(dir_name,file_name, block_f)  
 
 
 def send_request(host, port, method, data):
