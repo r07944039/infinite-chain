@@ -69,7 +69,7 @@ class Server:
           if n.online == True and self.name == P2P and n.p2p_sock != None:
             print("inside")
             try:
-              threading.Thread(target=callback, args=(n.p2p_sock)).start()
+              threading.Thread(target=callback, args=(n.p2p_sock,)).start()
             except socket.error as err:
               # DEBUG
               print(self.name + " offline: ", n.host, n.p2p_port, ": ", err)
@@ -79,7 +79,6 @@ class Server:
     def try_neighbors_sock(self):
       for n in self.neighbors:
         if self.name == P2P and n.p2p_sock == None:
-          print(self.name + ": try: ", n.host, n.p2p_sock)
           n.p2p_sock = self.try_p2p(n)
           print(self.name + ": online: ", n.host, n.p2p_sock)
         elif self.name == USER and n.user_sock == None:

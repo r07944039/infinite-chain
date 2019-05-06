@@ -15,6 +15,7 @@ class Broadcast:
     
     # n is a online neighbor
     def hello(self, p2p_sock):
+        p2p_sock.settimeout(5)
         p2p_sock.send(pack(
             "hello",
             "hello from " + str(self.s.port)
