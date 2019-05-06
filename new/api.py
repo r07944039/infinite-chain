@@ -23,8 +23,8 @@ class Broadcast:
                 "hello from " + str(self.s.port)
             ))
             recv = n.p2p_sock.recv(1024)
-            if recv:
-                print(unpack(recv))
+            # if recv:
+            #     print(unpack(recv))
         except socket.error as err:
             # DEBUG
             print(" offline: ", n.host, n.p2p_port, ": ", err)
@@ -40,7 +40,7 @@ class Response:
         # don't close sock
     
     def router(self, sock, data):
-        print('recv:', data)
+        # print('recv:', data)
         if data['method'] == 'hello':
             self.echo(sock, data)
         else:

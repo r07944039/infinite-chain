@@ -70,10 +70,10 @@ class Server:
       for n in self.neighbors:
         if self.name == P2P and n.p2p_sock == None:
           n.p2p_sock = self.try_p2p(n)
-          print(self.name + ": online: ", n.host, n.p2p_sock)
+          # print(self.name + ": check online: ", n.host, n.p2p_sock)
         elif self.name == USER and n.user_sock == None:
           n.user_sock = self.try_user(n)
-          print(self.name + ": online: ", n.host, n.user_sock)
+          # print(self.name + ": check online: ", n.host, n.user_sock)
         if n.p2p_sock != None or n.user_sock != None:
           n.online = True
     
@@ -84,7 +84,7 @@ class Server:
       try:
         s.connect((n.host, n.p2p_port))
       except socket.error as err:
-        print(self.name + ": retry: " + n.host + ":" + str(n.p2p_port), ": ", err)
+        # print(self.name + ": retry: " + n.host + ":" + str(n.p2p_port), ": ", err)
         return None
       return s
     
@@ -95,7 +95,7 @@ class Server:
       try:
         s.connect((n.host, n.user_port))
       except socket.error as err:
-        print(self.name + ": retry: " + n.host + ":" + str(n.user_port), ": ", err)
+        # print(self.name + ": retry: " + n.host + ":" + str(n.user_port), ": ", err)
         return None
       return s
 
