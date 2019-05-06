@@ -11,13 +11,15 @@ def sha256(data):
     return m.hexdigest()
 
 def pack(method, value):
-    return pickle.dumps({
+    d = json.dumps({
         "method": method,
         "value": value,
     })
+    return pickle.dumps(d)
 
 def unpack(packet):
-    return pickle.loads(packet)
+    d = pickle.loads(packet)
+    return json.loads(d)
 
 def _header_to_items(header):
     prev_block = header[8:72]
@@ -165,7 +167,7 @@ class Response:
                 'hash_begin': hash_begin, 
                 'hash_stop': hash_stop
             }
-            self.s.broadcast(self.s.apib.getBlocks, arg)
+            # self.s.broadcast(self.s.apib.getBlocks, arg)
             # error = getBlocks(hash_count, hash_begin, hash_stop)
             
         error = 0
