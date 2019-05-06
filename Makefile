@@ -1,5 +1,14 @@
 all: help
 
+new_server:
+	python3 new_server.py
+
+ping1:
+	python3 new_ping1.py
+
+ping2:
+	python3 new_ping2.py
+
 ## Run blockchain setup and start mining
 run:
 	python3 main.py

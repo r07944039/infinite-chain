@@ -73,11 +73,11 @@ def _check_and_make_directory(dir_name):
         os.mkdir(dir_name)
 
 def write_file(dir_name, file_name, block_f):
-    _check_and_make_directory(dir_name)
+    # _check_and_make_directory(dir_name)
 
-    file_name = os.path.join(dir_name,file_name)   
-    with open(file_name,'w') as f:
-        json.dump(block_f,f)
+    # file_name = os.path.join(dir_name,file_name)   
+    # with open(file_name,'w') as f:
+    #     json.dump(block_f,f)
 
 def read_file(dir_name, file_name):
     file_name = os.path.join(dir_name,file_name)

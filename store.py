@@ -1,3 +1,6 @@
+import threading
+lock = threading.Lock()
+
 node = ""
 state = ""
 count = 0

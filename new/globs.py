@@ -1,0 +1,4 @@
+NEIGHBORS = []
+
+# 3 seconds
+HEALTH_CHECK_INTERVAL=3
