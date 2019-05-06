@@ -22,13 +22,16 @@ def sha256(data):
     m.update(data.encode('utf-8'))
     return m.hexdigest()
 
+
 def _pack(data):
     d = json.dumps(data)
     return pickle.dumps(d)
 
+
 def unpack(packet):
     d = pickle.loads(packet)
     return json.loads(d)
+
 
 def _header_to_items(header):
     prev_block = header[8:72]
@@ -36,6 +39,7 @@ def _header_to_items(header):
     nonce = header[-8:]
 
     return prev_block, target, nonce
+
 
 def _verify_hash(block_hash, block_header):
     # error = 0
@@ -61,13 +65,15 @@ def _verify_height(new_height, cur_height):
         return True
     return False
 
+
 def _verify_shorter(new_height, cur_height):
     error = 0
     # cur_height = node_height
 
     if cur_height >= int(new_height):
         error = 1
-    return error 
+    return error
+
 
 class Broadcast:
     def __init__(self, server):
@@ -124,7 +130,7 @@ class Broadcast:
                     prev_block, target, nonce = _header_to_items(header)
                     new_block = Block(prev_block, target, nonce)
                     self.s.node.add_new_block(new_block)
-    
+
     # n is a online neighbor
     def hello(self, n, arg):
         sock = create_sock(n.host, n.p2p_port)
@@ -152,14 +158,14 @@ class Response:
         block_header = data['block_header']
         block_height = data['block_height']
         prev_block, target, nonce = _header_to_items(block_header)
-        
+
         need_getBlocks = False
 
         height = self.s.node.get_height()
         chain = self.s.node.get_chain()
 
         # drop and triger sendHeader back
-        error =  _verify_shorter(block_height, height)
+        error = _verify_shorter(block_height, height)
         if _verify_height(block_height, height):
             need_getBlocks = True
         if _verify_prev_block(prev_block, chain):
@@ -177,8 +183,8 @@ class Response:
             hash_stop = block_hash
             # FIXME: 這邊要改
             arg = {
-                'hash_count': hash_count, 
-                'hash_begin': hash_begin, 
+                'hash_count': hash_count,
+                'hash_begin': hash_begin,
                 'hash_stop': hash_stop
             }
             self.s.broadcast(self.s.apib.getBlocks, arg)
@@ -223,10 +229,8 @@ class Response:
             'result': result,
             'error': error
         }
-        sock.send(_pack({
-            'method': 'getBlocks',
-            'data': res
-        }))
+
+        sock.send(_pack(res))
 
     def getBlockCount(self, sock):
         height = self.s.node.get_height()
@@ -234,20 +238,61 @@ class Response:
             error = 1
         else:
             error = 0
+
         res = {
             'result': result,
             'error': error
         }
-        sock.send(_pack({
-            'method': 'getBlockCount',
-            'data': res
-        }))
-    
+
+        sock.send(_pack(res))
+
+    def getBlockHash(self, sock, data):
+        height = data['block_height']
+        if height > self.s.node.get_height():
+            error = 1
+            result = ""
+        else:
+            error = 0
+            chain = self.s.node.get_chain()
+            result = chain[height]
+
+        res = {
+            'error': error,
+            'result': result
+        }
+
+        sock.send(_pack(res))
+
+    def getBlockHeader(self, sock, data):
+        block_hash = data['block_hash']
+        chain = self.s.node.get_chain()
+        for block in chain:
+            header = block.block_header
+            if block.block_hash == block_hash:
+                result = {
+                    "version": header.version,
+                    "prev_block": header.prev_block,
+                    "merkle_root": header.merkle_root,
+                    "target": header.target,
+                    "nonce": header.nonce
+                }
+                error = 0
+            else:
+                error = 1
+                result = {}
+
+        res = {
+            'error': error,
+            'result': result
+        }
+
+        sock.send(_pack(res))
+
     def echo(self, sock, data):
         print('echo')
         # sock.send(_pack('', str(self.s.port)))
         # don't close sock
-    
+
     def router(self, sock, query):
         # print('recv:', data)
         method = query['method']
@@ -259,12 +304,18 @@ class Response:
             self.getBlocks(sock, data)
         elif method == 'getBlockCount':
             self.getBlockCount(sock)
+        elif method == 'getBlockHash':
+            self.getBlockHash(sock, data)
+        elif method == 'getBlockHeader':
+            self.getBlockHeader(sock, data)
         elif method == 'hello':
             self.echo(sock, data)
         else:
             pass
 
 # For user_port
+
+
 class SendTo:
     def __init__(self, server):
         self.s = server
@@ -278,5 +329,32 @@ class SendTo:
         }))
         recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
         sock.close()
+        if recv:
+            print(unpack(recv))
+
+    def getBlockHash(self, n, arg):
+        n.user_sock.settimeout(5)
+        n.user_sock.send(_pack({
+            'method': 'getBlockHash',
+            'data': {
+                'block_height': arg['block_height']
+            }
+        }))
+
+        recv = n.p2p_sock.recv(1024)
+        if recv:
+            print(unpack(recv))
+
+    def getBlockHeader(self, n, arg):
+        height = self.s.node.get_height()
+        chain = self.s.node.get_chain()
+        n.user_sock.settimeout(5)
+        n.user_sock.send(_pack({
+            'method': 'getBlockHeader',
+            'data': {
+                'block_hash': chain[height].block_hash
+            }
+        }))
+        recv = n.p2p_sock.recv(1024)
         if recv:
             print(unpack(recv))
