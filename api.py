@@ -131,11 +131,13 @@ class Broadcast:
             if len(result) > 0:
                 # print(len(result))
                 # result = max(result[0], result[1])
-                # check for the branch 
+                # check for the branch
+                clear = True  # 決定是否要重寫檔案
                 for header in result:
                     prev_block, target, nonce = _header_to_items(header)
                     new_block = Block(prev_block, target, nonce)
-                    self.s.node.add_new_block(new_block)
+                    self.s.node.add_new_block(new_block, clear)
+                    clear = False # 不用重寫了
 
     # n is a online neighbor
     def hello(self, n, arg):

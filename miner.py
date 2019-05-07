@@ -39,7 +39,7 @@ class Miner:
 
         # Add block into your block chain
         new_block = Block(block.block_hash, header.target, nonce)
-        self.node.add_new_block(new_block)
+        self.node.add_new_block(new_block, False)
 
         # Boardcast new block to network
         # sendHeader_send(new_block.block_hash,
