@@ -125,10 +125,12 @@ class Broadcast:
         sock.close()
         if recv:
             r = unpack(recv)
+            print(r)
             result = r['result']
-            if len(result) > 1:
-                print(len(result))
-                #result = max(result[0], result[1])
+            # print(result)
+            if len(result) > 0:
+                # print(len(result))
+                # result = max(result[0], result[1])
                 # check for the branch 
                 for header in result:
                     prev_block, target, nonce = _header_to_items(header)
