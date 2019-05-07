@@ -51,7 +51,7 @@ class Node():
     # For the first time getBlocks
     def rewrite_file(self):
         self.lock.acquire()
-        with open(self.file_name, 'r+') as f:
+        with open(self.file_name, 'w+') as f:
             # Erase the content 
             print("ERASE THE CONTENT")
             f.seek(0)
