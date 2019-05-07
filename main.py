@@ -7,7 +7,7 @@ import globs
 import neighbor
 import miner
 
-from n.node import Node
+from node import Node
 
 
 # set flags
