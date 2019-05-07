@@ -105,6 +105,7 @@ class Broadcast:
             print(r)
 
     def getBlocks(self, n, arg):
+        print(arg)
 
         d = json.dumps({
             'hash_count': arg['hash_count'],
@@ -119,14 +120,17 @@ class Broadcast:
         if sock == None:
             return
         sock.send(req)
+        print(req)
         recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
         sock.close()
         if recv:
             r = unpack(recv)
             result = r['result']
             if len(result) > 1:
-                result = max(result[0], result[1])
-                for header in result[1:]:
+                print(len(result))
+                #result = max(result[0], result[1])
+                # check for the branch 
+                for header in result:
                     prev_block, target, nonce = _header_to_items(header)
                     new_block = Block(prev_block, target, nonce)
                     self.s.node.add_new_block(new_block)
@@ -212,19 +216,20 @@ class Response:
         for block in chain:
             # 到尾了
             if hash_stop == block.block_hash:
+                result.append(block.block_header.header)
                 append = 0
-                continue
+                break
             if append == 1:
-                result.append(block.block_hash)
+                result.append(block.block_header.header)
             # 如果到 begin 的下一個開始計
             if hash_begin == block.block_hash:
                 append = 1
-
         # debug(result)
         # 如果找不到結果就回傳錯誤
         if len(result) == 0:
             error = 1
-
+        else:
+            error = 0
         res = {
             'result': result,
             'error': error
