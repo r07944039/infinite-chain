@@ -67,13 +67,9 @@ def _verify_height(new_height, cur_height):
 
 
 def _verify_shorter(new_height, cur_height):
-    error = 0
-    # cur_height = node_height
-
-    if cur_height >= int(new_height):
-        error = 1
-    return error
-
+    if cur_height < int(new_height):
+        return False
+    return True
 
 class Broadcast:
     def __init__(self, server):
@@ -125,19 +121,15 @@ class Broadcast:
         sock.close()
         if recv:
             r = unpack(recv)
-            print(r)
             result = r['result']
-            # print(result)
-            if len(result) > 0:
-                # print(len(result))
-                # result = max(result[0], result[1])
-                # check for the branch
-                clear = True  # 決定是否要重寫檔案
+            if len(result) > 1:
+                print(len(result))
+                #result = max(result[0], result[1])
+                # check for the branch 
                 for header in result:
                     prev_block, target, nonce = _header_to_items(header)
                     new_block = Block(prev_block, target, nonce)
-                    self.s.node.add_new_block(new_block, clear)
-                    clear = False # 不用重寫了
+                    self.s.node.add_new_block(new_block)
 
     # n is a online neighbor
     def hello(self, n, arg):
@@ -173,33 +165,37 @@ class Response:
         chain = self.s.node.get_chain()
 
         # drop and triger sendHeader back
-        error = _verify_shorter(block_height, height)
-        if _verify_height(block_height, height):
-            need_getBlocks = True
-        if _verify_prev_block(prev_block, chain):
-            need_getBlocks = True
-            error = 1
-        if _verify_hash(block_hash, block_header):
-            # 只是本人 hash 值不對，感覺可以直接 drop 掉
-            error = 1
+        if _verify_shorter(block_height, height):
+            pass
 
-        if need_getBlocks:
-            cur_height = height
-            cur_hash = chain[cur_height].block_hash
-            hash_count = block_height - cur_height
-            hash_begin = cur_hash
-            hash_stop = block_hash
-            # FIXME: 這邊要改
-            arg = {
-                'hash_count': hash_count,
-                'hash_begin': hash_begin,
-                'hash_stop': hash_stop
-            }
-            self.s.broadcast(self.s.apib.getBlocks, arg)
+        else:
+
+            if _verify_height(block_height, height):
+                need_getBlocks = True
+            if _verify_prev_block(prev_block, chain):
+                need_getBlocks = True
+                error = 1
+            if _verify_hash(block_hash, block_header):
+                # 只是本人 hash 值不對，感覺可以直接 drop 掉
+                error = 1
+
+            if need_getBlocks:
+                cur_height = height
+                cur_hash = chain[cur_height].block_hash
+                hash_count = block_height - cur_height
+                hash_begin = cur_hash
+                hash_stop = block_hash
+                # FIXME: 這邊要改
+                arg = {
+                    'hash_count': hash_count,
+                    'hash_begin': hash_begin,
+                    'hash_stop': hash_stop
+                }
+                self.s.broadcast(self.s.apib.getBlocks, arg)
         
         error = 0
         res = {
-            'error': 0
+            'error': error
         }
         sock.send(_pack(res))
 
