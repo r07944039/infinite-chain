@@ -25,6 +25,7 @@ class Node():
         self.lock.release()
         if clear == True:
             self.rewrite_file()
+            return
         self.write_file(block.block_header.header)
 
     def get_chain(self):
@@ -50,7 +51,7 @@ class Node():
     # For the first time getBlocks
     def rewrite_file(self):
         self.lock.acquire()
-        with open(self.file_name, 'a') as f:
+        with open(self.file_name, 'r+') as f:
             # Erase the content 
             print("ERASE THE CONTENT")
             f.seek(0)
