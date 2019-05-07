@@ -55,6 +55,16 @@ class Miner:
         return nonce
 
     def mine(self):
+        if self.node.check_file():
+            # FIXME: 這邊要改
+            arg = {
+              'hash_count': 2, 
+              'hash_begin': "0000063cd8f0327016240097e455422ea3a26dadd3b39cde25c18deb60b4d9cd", 
+              'hash_stop': "00002ec4e51f5fede85226d18a91a413482d3f5f5cd5ebe6d4e0e23cf5510ab8"
+            }
+            print(arg)
+            self.p2p.broadcast(self.p2p.apib.getBlocks, arg)
+        print("done!!!!!")
         while True:
             # keep mining
             # print(self.p2p.neighbors)

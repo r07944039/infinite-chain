@@ -7,7 +7,7 @@ import globs
 import neighbor
 import miner
 
-from node import Node
+from n.node import Node
 
 
 # set flags
@@ -36,7 +36,7 @@ print(globs.NEIGHBORS.append)
 
 
 def main():
-  node = Node(config['target'])
+  node = Node(config['target'],config['p2p_port'])
   s1 = server.Server(HOST, config['p2p_port'], 'p2p', node)
   s2 = server.Server(HOST, config['user_port'], 'user', node)
   t1 = threading.Thread(target=s1.listen)
