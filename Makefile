@@ -1,16 +1,20 @@
 main.all: help
 
+## Run hw3
+run:
+	python3 main.py configs/config_hw3.json
+
 ## Run node1
-n1:
-	python3 main.py configs/config1.json
+# n1:
+# 	python3 main.py configs/config1.json
 
-## Run node2
-n2:
-	python3 main.py configs/config2.json
+# ## Run node2
+# n2:
+# 	python3 main.py configs/config2.json
 
-## Run node3
-n3:
-	python3 main.py configs/config3.json
+# ## Run node3
+# n3:
+# 	python3 main.py configs/config3.json
 
 #########
 # Help ##

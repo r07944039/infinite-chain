@@ -8,6 +8,7 @@ import neighbor
 import miner
 
 from node import Node
+from wallet import Wallet
 
 
 # set flags
@@ -36,16 +37,30 @@ print(globs.NEIGHBORS.append)
 
 
 def main():
-  node = Node(config['target'], config['p2p_port'])
+  # 建立 node
+  node = Node(config['target'], config['p2p_port'], config['beneficiary'])
+  # 開啟 port listening
   s1 = server.Server(HOST, config['p2p_port'], 'p2p', node)
   s2 = server.Server(HOST, config['user_port'], 'user', node)
   t1 = threading.Thread(target=s1.listen)
   t2 = threading.Thread(target=s2.listen)
   t1.start()
   t2.start()
-  time.sleep(globs.WAIT_SECONDS_BEFORE_MINER) # Wait for socket connection
-  m = miner.Miner('miner', s1, s2, node)
-  t3 = threading.Thread(target=m.mine)
-  t3.start()
+  
+  # 開 wallet
+  w = Wallet(config['wallet']['public_key'], config['wallet']['private_key'])
+
+  # 不挖礦的情況
+  if config['mining'] is False:
+    pass
+  else:
+    # 挖礦前延遲
+    # time.sleep(globs.WAIT_SECONDS_BEFORE_MINER) # Wait for socket connection
+    time.sleep(config['delay'])
+    # 建立礦工
+    # 因為 beneficiary 貌似不會更動，所以讓 miner 挖到的每一塊都記錄相同的 beneficiary
+    m = miner.Miner('miner', s1, s2, node, config['beneficiary'])
+    t3 = threading.Thread(target=m.mine)
+    t3.start()
 
 main()

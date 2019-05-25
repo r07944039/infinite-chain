@@ -10,28 +10,20 @@ def sha256(data):
 
 
 class Block_header():
-    def __init__(self, prev_block, target, nonce):
+    def __init__(self, prev_block, transactions_hash, target, nonce, beneficiary):
         # 作業中的 version 和 merkle_root 為固定的
         self.version = "00000001"
         self.prev_block = prev_block
-        self.merkle_root = "0000000000000000000000000000000000000000000000000000000000000000"
+        self.transactions_hash = sha256(transactions_hash)
         self.target = target
         self.nonce = nonce
-        self.header = self.version + str(self.prev_block) + self.merkle_root + self.target + self.nonce
-
-# 可刪？
-class Block_hash():
-    def __init__(self, version, prev_block, merkle_root, target, nonce):
-        unhash = '{}{}{}{}{}'.format(
-            version, prev_block, merkle_root, str(target), str(nonce))
-        self.hash = sha256(unhash)
+        self.beneficiary = beneficiary
+        self.header = self.version + str(self.prev_block) + self.transactions_hash + self.target + self.nonce + self.beneficiary
 
 
 class Block():
-    def __init__(self, prev_block, target, nonce):
-        block_header = Block_header(prev_block, target, nonce)
-        # block_hash = Block_hash(block_header.version, block_header.prev_block,
-        #                         block_header.merkle_root, block_header.target, block_header.nonce)
+    def __init__(self, prev_block, transactions_hash, target, nonce, beneficiary):
+        block_header = Block_header(prev_block, transactions_hash, target, nonce, beneficiary)
         self.block_header = block_header
         self.block_hash = sha256(self.block_header.header)
         # self.block_hash = block_hash.hash

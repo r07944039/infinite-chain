@@ -12,19 +12,21 @@ def sha256(data):
 
 
 class Miner:
-    def __init__(self, name, p2pserver, userserver, node):
+    def __init__(self, name, p2pserver, userserver, node, beneficiary):
         self.name = name
         self.p2p = p2pserver
         self.user = userserver
         self.node = node
+        self.beneficiary = beneficiary
 
     def mining(self):
         height = self.node.get_height()
         chain = self.node.get_chain()
         block = chain[height]
         header = block.block_header
+        # FIXME: 因為 merkle tree 在這份作業被刪除了所以我用寫死的方式去加 ...
         pre_string = header.version + block.block_hash + \
-            header.merkle_root + header.target
+            "0000000000000000000000000000000000000000000000000000000000000000" + header.target
         nonce = os.urandom(4).hex()
         nonce_count = int(nonce, 16)
         mine = pre_string + nonce
@@ -38,7 +40,7 @@ class Miner:
             mine = pre_string + nonce
 
         # Add block into your block chain
-        new_block = Block(block.block_hash, header.target, nonce)
+        new_block = Block(block.block_hash, "", header.target, nonce, self.beneficiary)
         self.node.add_new_block(new_block, False)
 
         # Boardcast new block to network

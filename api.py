@@ -33,12 +33,14 @@ def unpack(packet):
     return json.loads(d)
 
 
-def _header_to_items(header):
+def header_to_items(header):
     prev_block = header[8:72]
-    target = header[-72:-8]
-    nonce = header[-8:]
+    transactions_hash = header[72:136]
+    target = header[136:-136] # 64
+    nonce = header[-136:-128] # 8
+    beneficiary = header[-128:]
 
-    return prev_block, target, nonce
+    return prev_block, transactions_hash, target, nonce, beneficiary
 
 
 def _verify_hash(block_hash, block_header):
@@ -127,8 +129,8 @@ class Broadcast:
                 #result = max(result[0], result[1])
                 # check for the branch 
                 for header in result:
-                    prev_block, target, nonce = _header_to_items(header)
-                    new_block = Block(prev_block, target, nonce)
+                    prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
+                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary)
                     self.s.node.add_new_block(new_block)
 
     # n is a online neighbor
@@ -157,7 +159,7 @@ class Response:
         block_hash = data['block_hash']
         block_header = data['block_header']
         block_height = data['block_height']
-        prev_block, target, nonce = _header_to_items(block_header)
+        prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(block_header)
 
         need_getBlocks = False
 

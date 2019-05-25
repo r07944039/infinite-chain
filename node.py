@@ -2,14 +2,13 @@
 import threading
 import os
 from block.block import Block
-from api import _header_to_items
+from api import header_to_items
 
 class Node():
-    def __init__(self, target, p2p_port):
+    def __init__(self, target, p2p_port, beneficiary):
         # Genesis block
         # 要吃 config.js
-        block = Block('0000000000000000000000000000000000000000000000000000000000000000',
-                      target, '00002321')
+        block = Block('0000000000000000000000000000000000000000000000000000000000000000', "", target, '00002321', beneficiary)
         self.chain = []
         self.chain.append(block)
         self.height = 0
@@ -66,8 +65,8 @@ class Node():
         with open(self.file_name, 'r') as f:
             header = f.readlines()
         for h in header:
-            prev_block, target, nonce = _header_to_items(h[:-1])
-            block = Block(prev_block, target, nonce)
+            prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(h[:-1])
+            block = Block(prev_block, transactions_hash, target, nonce, beneficiary)
             self.chain.append(block)
             self.height += 1      
         
