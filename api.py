@@ -3,6 +3,7 @@ import socket
 import hashlib
 import json
 import globs
+from ecdsa import SigningKey, VerifyingKey, BadSignatureError
 
 from block.block import Block
 
@@ -34,6 +35,9 @@ def unpack(packet):
 
 
 def header_to_items(header):
+    '''
+        FIXME: 寫的跟助教文件不太一樣 ...
+    '''
     prev_block = header[8:72]
     transactions_hash = header[72:136]
     target = header[136:-136] # 64
@@ -72,6 +76,14 @@ def _verify_shorter(new_height, cur_height):
     if cur_height < int(new_height):
         return False
     return True
+
+def verify_signature(self, trans):
+    vk = VerifyingKey.from_pem(trans.sender_pub_key)
+    try:
+        vk.verify(trans.signature, trans.msg)
+        return True
+    except BadSignatureError:
+        return False
 
 class Broadcast:
     def __init__(self, server):
@@ -161,7 +173,8 @@ class Broadcast:
             r = unpack(recv)
             result = r['result']
             print('getBlocks: ', r)
-            if len(result) > 1:
+
+            if len(result) > 0:
                 # print(len(result))
                 #result = max(result[0], result[1])
                 # check for the branch 
@@ -172,6 +185,21 @@ class Broadcast:
                     new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [])
                     # 後面傳的 True 代表要把整個檔案重寫
                     self.s.node.add_new_block(new_block, True)
+                    print("done")
+
+    def sendTransaction(self, n, arg):
+        sock = create_sock(n.host, n.p2p_port)
+        if sock == None:
+            return
+
+        sock.send(_pack({
+            "method": "sendTransaction",
+            "data": arg
+        }))
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
+        if recv:
+            print("sendTransaction: ", unpack(recv))
 
     # n is a online neighbor
     def hello(self, n, arg):
@@ -384,6 +412,19 @@ class Response:
 
         sock.send(_pack(res))
 
+    def sendTransaction(self, sock, data):
+        # TODO: verify_signature
+        if verify_signature(data):
+            error = 0
+        else:
+            error = 1
+        
+        res = {
+            'error': error
+        }
+
+        sock.send(_pack(res))
+
     def echo(self, sock, data):
         print('echo')
         # sock.send(_pack('', str(self.s.port)))
@@ -406,6 +447,8 @@ class Response:
             self.getBlockHash(sock, data)
         elif method == 'getBlockHeader':
             self.getBlockHeader(sock, data)
+        elif method == 'sendTransaction':
+            self.sendTransaction(sock, data)
         elif method == 'hello':
             self.echo(sock, data)
         else:

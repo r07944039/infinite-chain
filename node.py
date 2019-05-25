@@ -67,6 +67,7 @@ class Node():
             # print("STOP")
             for block in self.chain:
                 f.write(block.block_header.header + "\n")
+            f.close()
         self.lock.release()
     
     def read_file(self):
