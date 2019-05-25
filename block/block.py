@@ -12,7 +12,7 @@ def sha256(data):
 class Block_header():
     def __init__(self, prev_block, transactions_hash, target, nonce, beneficiary, transactions):
         # 作業中的 version 和 merkle_root 為固定的
-        self.version = "00000001"
+        self.version = "00000002"
         self.prev_block = prev_block
         self.transactions_hash = sha256(transactions_hash)
         self.target = target
