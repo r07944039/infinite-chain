@@ -17,7 +17,7 @@ class Transaction():
         self.msg = sha256(self.nonce + self.sender_pub_key + self.to + self.value + self.fee)
         
         sk = SigningKey.from_string(bytes.fromhex(wallet.priv_key), curve=SECP256k1)
-        self.signature = sk.sign(bytes(self.msg,'utf-8'))
+        self.signature = sk.sign(bytes(self.msg,'utf-8')).hex()
 
     def get_transaction(self):
         return {
@@ -32,7 +32,7 @@ class Transaction():
     def verify_signature(self, trans):
         vk = VerifyingKey.from_string(bytes.fromhex(trans.sender_pub_key), curve=SECP256k1)
         try:
-            vk.verify(trans.signature, bytes(trans.msg,'utf-8'))
+            vk.verify(bytes.fromhex(trans.signature), bytes(trans.msg,'utf-8'))
             return True
         except BadSignatureError:
             return False
