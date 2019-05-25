@@ -40,16 +40,18 @@ def main():
   # 建立 node
   # FIXME: 先寫死 transactions
   node = Node(config['target'], config['p2p_port'], config['beneficiary'], [])
+  
+  # 開 wallet
+  wallet = Wallet(config['wallet']['public_key'], config['wallet']['private_key'])
+
   # 開啟 port listening
-  s1 = server.Server(HOST, config['p2p_port'], 'p2p', node)
-  s2 = server.Server(HOST, config['user_port'], 'user', node)
+  s1 = server.Server(HOST, config['p2p_port'], 'p2p', node, wallet)
+  s2 = server.Server(HOST, config['user_port'], 'user', node, wallet)
   t1 = threading.Thread(target=s1.listen)
   t2 = threading.Thread(target=s2.listen)
   t1.start()
   t2.start()
   
-  # 開 wallet
-  w = Wallet(config['wallet']['public_key'], config['wallet']['private_key'])
 
   # 不挖礦的情況
   if config['mining'] is False:

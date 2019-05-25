@@ -11,7 +11,7 @@ P2P = 'p2p'
 USER = 'user'
 
 class Server:
-    def __init__(self, host, port, name, node):
+    def __init__(self, host, port, name, node, wallet):
         self.name = name
         self.host = host
         self.port = port
@@ -29,6 +29,7 @@ class Server:
         # keep pinging neighbors
         threading.Thread(target=self.__retry_neighbors).start()
         self.node = node
+        self.wallet = wallet
         # loop through all online neighbor and call callback function
     def broadcast(self, callback, arg):
       for n in self.neighbors:
