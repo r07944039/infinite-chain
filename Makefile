@@ -4,9 +4,9 @@ main.all: help
 run:
 	python3 main.py configs/config_hw3.json
 
-## Run node1
-# n1:
-# 	python3 main.py configs/config1.json
+# Run node1
+n1:
+	python3 main.py configs/config_hw3_2.json
 
 # ## Run node2
 # n2:

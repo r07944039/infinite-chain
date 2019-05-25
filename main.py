@@ -18,14 +18,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument("configfile", type=str, help="configfile path")
 args = parser.parse_args()
 
-print(args.configfile)
+# print(args.configfile)
 # read config from json
 # set globs here
 # Open socket server
 HOST = '127.0.0.1'
 f = open(args.configfile, 'r')
 config = json.load(f)
-print(config)
+# print(config)
 f.close()
 
 for n in config['neighbor_list']:

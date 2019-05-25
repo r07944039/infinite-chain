@@ -47,12 +47,20 @@ class Miner:
         # Boardcast new block to network
         # sendHeader_send(new_block.block_hash,
         #                 new_block.block_header.header, height)
+        header = new_block.block_header
         arg = {
-            'block_hash': new_block.block_hash,
-            'block_header': new_block.block_header.header, 
+            # 'block_hash': new_block.block_hash,
+            # 'block_header': new_block.block_header, 
+            "version": 2,
+            "prev_block": header.prev_block,
+            "transactions_hash": header.transactions_hash,
+            "beneficiary": header.beneficiary,
+            "target": header.target,
+            "nonce": header.nonce,
+            "transactions": header.transactions,
             'block_height': height
         }
-        self.p2p.broadcast(self.p2p.apib.sendHeader, arg)
+        self.p2p.broadcast(self.p2p.apib.sendBlock, arg)
 
         print(nonce)
         return nonce

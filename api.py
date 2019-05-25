@@ -77,18 +77,54 @@ class Broadcast:
     def __init__(self, server):
         self.s = server
 
-    def sendHeader(self, n, arg):
-        block_hash = arg['block_hash']
-        block_header = arg['block_header']
-        block_height = arg['block_height']
+    # def sendHeader(self, n, arg):
+    #     block_hash = arg['block_hash']
+    #     block_header = arg['block_header']
+    #     block_height = arg['block_height']
+
+    #     d = json.dumps({
+    #         'block_hash': block_hash,
+    #         'block_header': block_header,
+    #         'block_height': block_height
+    #     })
+    #     req = _pack({
+    #         'method': 'sendHeader',
+    #         'data': d
+    #     })
+    #     print(req)
+    #     sock = create_sock(n.host, n.p2p_port)
+    #     if sock == None:
+    #         return
+    #     sock.send(req)
+    #     recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+    #     sock.close()
+    #     if recv:
+    #         r = unpack(recv)
+    #         print(r)
+
+    '''
+        基本上是跟 sendHeader 一樣
+        只是多了一個 transactions
+        要注意的地方: 沒有傳 hash 了
+    '''
+    def sendBlock(self, n, arg):
+        # block_hash = arg['block_hash']
+        # header = arg['block_header']
+        height = arg['block_height']
+        # print(header)
 
         d = json.dumps({
-            'block_hash': block_hash,
-            'block_header': block_header,
-            'block_height': block_height
+            "version": 2,
+            "prev_block": arg['prev_block'],
+            "transactions_hash": arg['transactions_hash'],
+            "beneficiary": arg['beneficiary'],
+            "target": arg['target'],
+            "nonce": arg['nonce'],
+            "transactions": arg['transactions']
         })
         req = _pack({
-            'method': 'sendHeader',
+            'method': 'sendBlock',
+            'height': height,
             'data': d
         })
         print(req)
@@ -156,11 +192,64 @@ class Response:
     def __init__(self, server):
         self.s = server
 
-    def sendHeader(self, sock, data):
-        block_hash = data['block_hash']
-        block_header = data['block_header']
-        block_height = data['block_height']
-        prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(block_header)
+    # def sendHeader(self, sock, data):
+    #     block_hash = data['block_hash']
+    #     block_header = data['block_header']
+    #     block_height = data['block_height']
+    #     prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(block_header)
+
+    #     need_getBlocks = False
+
+    #     height = self.s.node.get_height()
+    #     chain = self.s.node.get_chain()
+
+    #     # drop and triger sendHeader back
+    #     if _verify_shorter(block_height, height):
+    #         pass
+
+    #     else:
+
+    #         if _verify_height(block_height, height):
+    #             need_getBlocks = True
+    #         if _verify_prev_block(prev_block, chain):
+    #             need_getBlocks = True
+    #             error = 1
+    #         if _verify_hash(block_hash, block_header):
+    #             # 只是本人 hash 值不對，感覺可以直接 drop 掉
+    #             error = 1
+
+    #         if need_getBlocks:
+    #             cur_height = height
+    #             cur_hash = chain[cur_height].block_hash
+    #             hash_count = block_height - cur_height
+    #             hash_begin = cur_hash
+    #             hash_stop = block_hash
+    #             arg = {
+    #                 'hash_count': hash_count,
+    #                 'hash_begin': hash_begin,
+    #                 'hash_stop': hash_stop
+    #             }
+    #             self.s.broadcast(self.s.apib.getBlocks, arg)
+        
+    #     error = 0
+    #     res = {
+    #         'error': error
+    #     }
+    #     sock.send(_pack(res))
+
+    '''
+        因為沒有傳 hash 所以很多事情不能做
+        感覺要問一下助教這樣合不合理 ...
+        還是他們是希望我們自己拼起來 = =
+    '''
+    def sendBlock(self, sock, data, block_height):
+        # block_hash = data['block_hash']
+        # block_header = data['block_header']
+        # block_height = data['block_height']
+        # prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(block_header)
+        # print(type(data))
+        prev_block = data['prev_block']
+
 
         need_getBlocks = False
 
@@ -178,22 +267,24 @@ class Response:
             if _verify_prev_block(prev_block, chain):
                 need_getBlocks = True
                 error = 1
-            if _verify_hash(block_hash, block_header):
-                # 只是本人 hash 值不對，感覺可以直接 drop 掉
-                error = 1
+            # TODO: 因為沒有傳 hash 應該是改成別的驗證方法
+            # if _verify_hash(block_hash, block_header):
+            #     # 只是本人 hash 值不對，感覺可以直接 drop 掉
+            #     error = 1
 
-            if need_getBlocks:
-                cur_height = height
-                cur_hash = chain[cur_height].block_hash
-                hash_count = block_height - cur_height
-                hash_begin = cur_hash
-                hash_stop = block_hash
-                arg = {
-                    'hash_count': hash_count,
-                    'hash_begin': hash_begin,
-                    'hash_stop': hash_stop
-                }
-                self.s.broadcast(self.s.apib.getBlocks, arg)
+            # TODO: 一樣是 hash 的問題
+            # if need_getBlocks:
+            #     cur_height = height
+            #     cur_hash = chain[cur_height].block_hash
+            #     hash_count = block_height - cur_height
+            #     hash_begin = cur_hash
+            #     hash_stop = block_hash
+            #     arg = {
+            #         'hash_count': hash_count,
+            #         'hash_begin': hash_begin,
+            #         'hash_stop': hash_stop
+            #     }
+            #     self.s.broadcast(self.s.apib.getBlocks, arg)
         
         error = 0
         res = {
@@ -304,8 +395,10 @@ class Response:
         method = query['method']
         if 'data' in query:
             data = json.loads(query['data'])
-        if method == 'sendHeader':
-            self.sendHeader(sock, data)
+        # if method == 'sendHeader':
+        #     self.sendHeader(sock, data)
+        if method == 'sendBlock':
+            self.sendBlock(sock, data, query['height'])
         elif method == 'getBlocks':
             self.getBlocks(sock, data)
         elif method == 'getBlockCount':
