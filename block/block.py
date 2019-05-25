@@ -14,7 +14,7 @@ class Block_header():
         # 作業中的 version 和 merkle_root 為固定的
         self.version = "00000002"
         self.prev_block = prev_block
-        self.transactions_hash = sha256(transactions_hash)
+        self.transactions_hash = transactions_hash
         self.target = target
         self.nonce = nonce
         self.beneficiary = beneficiary

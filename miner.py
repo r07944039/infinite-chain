@@ -41,7 +41,7 @@ class Miner:
 
         # Add block into your block chain
         # FIXME: 寫死 transactions
-        new_block = Block(block.block_hash, "", header.target, nonce, self.beneficiary, [])
+        new_block = Block(block.block_hash, sha256(""), header.target, nonce, self.beneficiary, [])
         self.node.add_new_block(new_block, False)
 
         # Boardcast new block to network
@@ -65,9 +65,9 @@ class Miner:
               'hash_begin': "0000063cd8f0327016240097e455422ea3a26dadd3b39cde25c18deb60b4d9cd", 
               'hash_stop': "00002ec4e51f5fede85226d18a91a413482d3f5f5cd5ebe6d4e0e23cf5510ab8"
             }
-            print(arg)
+            # print(arg)
             self.p2p.broadcast(self.p2p.apib.getBlocks, arg)
-        print("done!!!!!")
+        # print("done!!!!!")
         while True:
             # keep mining
             # print(self.p2p.neighbors)

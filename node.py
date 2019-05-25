@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
+import hashlib
 import threading
 import os
 from block.block import Block
 from api import header_to_items
 
+
+def sha256(data):
+    m = hashlib.sha256()
+    m.update(data.encode('utf-8'))
+    return m.hexdigest()
+
 class Node():
     def __init__(self, target, p2p_port, beneficiary, transactions):
         # Genesis block
         # 要吃 config.js
-        block = Block('0000000000000000000000000000000000000000000000000000000000000000', "", target, '00002321', beneficiary, transactions)
+        block = Block('0000000000000000000000000000000000000000000000000000000000000000', sha256(""), target, '00002321', beneficiary, transactions)
         self.chain = []
         self.chain.append(block)
         self.height = 0

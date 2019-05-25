@@ -188,7 +188,6 @@ class Response:
                 hash_count = block_height - cur_height
                 hash_begin = cur_hash
                 hash_stop = block_hash
-                # FIXME: 這邊要改
                 arg = {
                     'hash_count': hash_count,
                     'hash_begin': hash_begin,
@@ -214,7 +213,6 @@ class Response:
 
         chain = self.s.node.get_chain()
 
-        # FIXME: 找不到助教範例裡面的 hash
         # Brute force QAQ
         for block in chain:
             # 到尾了
