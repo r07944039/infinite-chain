@@ -41,8 +41,8 @@ class Miner:
             mine = pre_string + nonce
 
         # Add block into your block chain
-        # FIXME: 寫死 transactions
-        new_block = Block(block.block_hash, sha256(""), header.target, nonce, self.beneficiary, [])
+        # FIXME: 寫死 transactions & balance 亂寫
+        new_block = Block(block.block_hash, sha256(""), header.target, nonce, self.beneficiary, [], 0)
         self.node.add_new_block(new_block, False)
 
         # Boardcast new block to network

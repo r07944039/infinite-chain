@@ -15,7 +15,8 @@ class Node():
     def __init__(self, target, p2p_port, beneficiary, transactions):
         # Genesis block
         # 要吃 config.js
-        block = Block('0000000000000000000000000000000000000000000000000000000000000000', sha256(""), target, '00002321', beneficiary, transactions)
+        # 一開始 balance 是 0
+        block = Block('0000000000000000000000000000000000000000000000000000000000000000', sha256(""), target, '00002321', beneficiary, transactions, 0)
         self.chain = []
         self.chain.append(block)
         self.height = 0
@@ -75,7 +76,8 @@ class Node():
             header = f.readlines()
         for h in header:
             prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(h[:-1])
-            block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [])
+            # FIXME: balance 亂寫成 0
+            block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [], 0)
             self.chain.append(block)
             self.height += 1      
         

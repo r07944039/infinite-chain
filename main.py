@@ -48,8 +48,8 @@ def main():
   t1.start()
   t2.start()
   
-  # 開 wallet: 一開始沒錢
-  w = Wallet(config['wallet']['public_key'], config['wallet']['private_key'], 0)
+  # 開 wallet
+  w = Wallet(config['wallet']['public_key'], config['wallet']['private_key'])
 
   # 不挖礦的情況
   if config['mining'] is False:

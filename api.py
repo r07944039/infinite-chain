@@ -182,7 +182,8 @@ class Broadcast:
                     prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
                     # FIXME: 因為 transactions 的部分還沒處理好，目前先直接寫死說每個都是空字串
                     # 不知道為什麼目前同步只會成功一點 不會全部成功...
-                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [])
+                    # balance 先亂寫 = =
+                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [], 0)
                     # 後面傳的 True 代表要把整個檔案重寫
                     self.s.node.add_new_block(new_block, True)
                     print("done")
@@ -425,6 +426,24 @@ class Response:
 
         sock.send(_pack(res))
 
+    def getbalance(self, sock, data):
+        chain = chain = self.s.node.get_chain()
+        cur_height = self.s.node.get_height()
+        # 只使用最長鏈之中 confirmation 大於等於 3 的 block 來計算賬戶餘額
+        if data['address'] is chain[cur_height - 3].beneficiary:
+            error = 0
+            balance = chain[cur_height - 3].balance
+        else:
+            error = 0
+            balance = 0
+
+        res = {
+            'error': error,
+            'balance': balance
+        }
+
+        sock.send(_pack(res))
+
     def echo(self, sock, data):
         print('echo')
         # sock.send(_pack('', str(self.s.port)))
@@ -449,6 +468,8 @@ class Response:
             self.getBlockHeader(sock, data)
         elif method == 'sendTransaction':
             self.sendTransaction(sock, data)
+        elif method == 'getbalance':
+            self.getbalance(sock, data)
         elif method == 'hello':
             self.echo(sock, data)
         else:
@@ -503,3 +524,19 @@ class SendTo:
         sock.close()
         if recv:
             print(unpack(recv))
+
+    def getbalance(self, n, arg):
+        sock = create_sock(n.host, n.user_port)
+        if sock == None:
+            return
+        address = arg['address']
+        sock.send(_pack({
+            'method': 'getbalance',
+            'data': {
+                'address': address
+            }
+        }))
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
+        if recv:
+            print('getbalance: ', unpack(recv))
