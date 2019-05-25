@@ -33,7 +33,7 @@ for n in config['neighbor_list']:
     neighbor.Neighbor(n['ip'], n['p2p_port'], n['user_port'])
   )
 
-print(globs.NEIGHBORS.append)
+# print(globs.NEIGHBORS.append)
 
 
 def main():

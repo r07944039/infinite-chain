@@ -29,10 +29,11 @@ class Node():
         self.chain.append(block)
         self.height += 1
         self.lock.release()
-        if clear == True:
+        if clear is True:
             self.rewrite_file()
             return
-        self.write_file(block.block_header.header)
+        else: 
+            self.write_file(block.block_header.header)
 
     def get_chain(self):
         self.lock.acquire()

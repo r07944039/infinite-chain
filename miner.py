@@ -24,9 +24,10 @@ class Miner:
         chain = self.node.get_chain()
         block = chain[height]
         header = block.block_header
-        # FIXME: 因為 merkle tree 在這份作業被刪除了所以我用寫死的方式去加 ...
-        pre_string = header.version + block.block_hash + \
-            "0000000000000000000000000000000000000000000000000000000000000000" + header.target
+        # FIXME: 刪掉 merkle tree，不知道會不會有什麼影響
+        # pre_string = header.version + block.block_hash + \
+        #     "0000000000000000000000000000000000000000000000000000000000000000" + header.target
+        pre_string = header.version + block.block_hash + header.target
         nonce = os.urandom(4).hex()
         nonce_count = int(nonce, 16)
         mine = pre_string + nonce

@@ -136,10 +136,10 @@ class Broadcast:
         sock.close()
         if recv:
             r = unpack(recv)
-            print(r)
+            print('sendBlock: ', r)
 
     def getBlocks(self, n, arg):
-        print(arg)
+        # print(arg)
 
         d = json.dumps({
             'hash_count': arg['hash_count'],
@@ -160,15 +160,18 @@ class Broadcast:
         if recv:
             r = unpack(recv)
             result = r['result']
+            print('getBlocks: ', r)
             if len(result) > 1:
-                print(len(result))
+                # print(len(result))
                 #result = max(result[0], result[1])
                 # check for the branch 
                 for header in result:
                     prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
                     # FIXME: 因為 transactions 的部分還沒處理好，目前先直接寫死說每個都是空字串
+                    # 不知道為什麼目前同步只會成功一點 不會全部成功...
                     new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [])
-                    self.s.node.add_new_block(new_block)
+                    # 後面傳的 True 代表要把整個檔案重寫
+                    self.s.node.add_new_block(new_block, True)
 
     # n is a online neighbor
     def hello(self, n, arg):
@@ -237,19 +240,17 @@ class Response:
     #     }
     #     sock.send(_pack(res))
 
-    '''
-        因為沒有傳 hash 所以很多事情不能做
-        感覺要問一下助教這樣合不合理 ...
-        還是他們是希望我們自己拼起來 = =
-    '''
     def sendBlock(self, sock, data, block_height):
         # block_hash = data['block_hash']
         # block_header = data['block_header']
         # block_height = data['block_height']
         # prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(block_header)
         # print(type(data))
-        prev_block = data['prev_block']
 
+        prev_block = data['prev_block']
+        # header 自己用拼的
+        block_header = str(data['version']).zfill(8)+ prev_block + data['transactions_hash'] + data['target'] + data['nonce'] + data['beneficiary']
+        block_hash = sha256(block_header)
 
         need_getBlocks = False
 
@@ -267,24 +268,22 @@ class Response:
             if _verify_prev_block(prev_block, chain):
                 need_getBlocks = True
                 error = 1
-            # TODO: 因為沒有傳 hash 應該是改成別的驗證方法
-            # if _verify_hash(block_hash, block_header):
-            #     # 只是本人 hash 值不對，感覺可以直接 drop 掉
-            #     error = 1
+            if _verify_hash(block_hash, block_header):
+                # 只是本人 hash 值不對，感覺可以直接 drop 掉
+                error = 1
 
-            # TODO: 一樣是 hash 的問題
-            # if need_getBlocks:
-            #     cur_height = height
-            #     cur_hash = chain[cur_height].block_hash
-            #     hash_count = block_height - cur_height
-            #     hash_begin = cur_hash
-            #     hash_stop = block_hash
-            #     arg = {
-            #         'hash_count': hash_count,
-            #         'hash_begin': hash_begin,
-            #         'hash_stop': hash_stop
-            #     }
-            #     self.s.broadcast(self.s.apib.getBlocks, arg)
+            if need_getBlocks:
+                cur_height = height
+                cur_hash = chain[cur_height].block_hash
+                hash_count = block_height - cur_height
+                hash_begin = cur_hash
+                hash_stop = block_hash
+                arg = {
+                    'hash_count': hash_count,
+                    'hash_begin': hash_begin,
+                    'hash_stop': hash_stop
+                }
+                self.s.broadcast(self.s.apib.getBlocks, arg)
         
         error = 0
         res = {
@@ -326,7 +325,7 @@ class Response:
             'result': result,
             'error': error
         }
-
+        
         sock.send(_pack(res))
 
     def getBlockCount(self, sock):
