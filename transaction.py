@@ -1,5 +1,5 @@
 import hashlib
-from ecdsa import SigningKey, VerifyingKey, BadSignatureError
+from ecdsa import SigningKey, VerifyingKey, BadSignatureError, SECP256k1
 
 def sha256(data):
     m = hashlib.sha256()
@@ -16,12 +16,8 @@ class Transaction():
         self.value = value
         self.msg = sha256(self.nonce + self.sender_pub_key + self.to + self.value + self.fee)
         
-        # SECP256k1 is the Bitcoin elliptic curve
-        sk = SigningKey.from_pem(wallet.priv_key)
-        # vk = sk.get_verifying_key()
-        self.signature = sk.sign(self.msg)
-        # vk.verify(sig, b"message") # True
-
+        sk = SigningKey.from_string(bytes.fromhex(wallet.priv_key), curve=SECP256k1)
+        self.signature = sk.sign(bytes(self.msg,'utf-8'))
 
     def get_transaction(self):
         return {
@@ -34,9 +30,9 @@ class Transaction():
         }
 
     def verify_signature(self, trans):
-        vk = VerifyingKey.from_pem(trans.sender_pub_key)
+        vk = VerifyingKey.from_string(bytes.fromhex(trans.sender_pub_key), curve=SECP256k1)
         try:
-            vk.verify(trans.signature, trans.msg)
+            vk.verify(trans.signature, bytes(trans.msg,'utf-8'))
             return True
         except BadSignatureError:
             return False
