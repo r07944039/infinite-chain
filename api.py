@@ -130,7 +130,8 @@ class Broadcast:
                 # check for the branch 
                 for header in result:
                     prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
-                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary)
+                    # FIXME: 因為 transactions 的部分還沒處理好，目前先直接寫死說每個都是空字串
+                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [])
                     self.s.node.add_new_block(new_block)
 
     # n is a online neighbor

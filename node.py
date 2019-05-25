@@ -5,10 +5,10 @@ from block.block import Block
 from api import header_to_items
 
 class Node():
-    def __init__(self, target, p2p_port, beneficiary):
+    def __init__(self, target, p2p_port, beneficiary, transactions):
         # Genesis block
         # 要吃 config.js
-        block = Block('0000000000000000000000000000000000000000000000000000000000000000', "", target, '00002321', beneficiary)
+        block = Block('0000000000000000000000000000000000000000000000000000000000000000', "", target, '00002321', beneficiary, transactions)
         self.chain = []
         self.chain.append(block)
         self.height = 0
@@ -66,7 +66,7 @@ class Node():
             header = f.readlines()
         for h in header:
             prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(h[:-1])
-            block = Block(prev_block, transactions_hash, target, nonce, beneficiary)
+            block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [])
             self.chain.append(block)
             self.height += 1      
         

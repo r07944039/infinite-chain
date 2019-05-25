@@ -38,7 +38,8 @@ print(globs.NEIGHBORS.append)
 
 def main():
   # 建立 node
-  node = Node(config['target'], config['p2p_port'], config['beneficiary'])
+  # FIXME: 先寫死 transactions
+  node = Node(config['target'], config['p2p_port'], config['beneficiary'], [])
   # 開啟 port listening
   s1 = server.Server(HOST, config['p2p_port'], 'p2p', node)
   s2 = server.Server(HOST, config['user_port'], 'user', node)
