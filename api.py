@@ -27,11 +27,41 @@ def sha256(data):
 def _pack(data):
     d = json.dumps(data)
     return pickle.dumps(d)
+    # return d
 
 
 def unpack(packet):
-    d = pickle.loads(packet)
-    return json.loads(d)
+    '''
+        照以前的傳法 pickle 會噴錯
+        pickle 是給 python socket 用的, 但是 JS 那邊沒有 pickle
+        所以助教的 msg 會 unpack 失敗
+        但我們送回去時還是得用 pickle
+
+    '''
+    # print(type(packet))
+
+    # if type(packet) is bytes:
+    #     packet = json.loads(pickle.loads(packet))
+    # elif type(packet) is str:
+    #     packet = packet.decode("utf-8")
+    #     packet = json.loads(packet)
+
+    # print(packet.decode("utf-8"))
+    
+    print(type(packet))
+    print(packet)
+    
+    # print(type(packet))
+    # if type(packet) is bytes:
+    #     packet = packet.decode("utf-8")
+    #     print(packet)
+    # print(packet)
+    # print(type(packet))
+    # d = pickle.loads(packet)
+    # return json.loads(d)
+    # packet = json.loads(pickle.loads(packet))
+    packet = json.loads(packet)
+    return packet
 
 
 def header_to_items(header):
@@ -428,10 +458,10 @@ class Response:
 
     def getbalance(self, sock, data):
         chain = chain = self.s.node.get_chain()
-        cur_height = self.s.node.get_height()
-        # 只使用最長鏈之中 confirmation 大於等於 3 的 block 來計算賬戶餘額
+        cur_height = self.s.node.get_height()    
         if data['address'] is self.s.wallet.pub_key:
             error = 0
+            # 只使用最長鏈之中 confirmation 大於等於 3 的 block 來計算賬戶餘額
             balance = chain[cur_height - 3].balance
         else:
             error = 0
@@ -453,7 +483,10 @@ class Response:
         # print('recv:', data)
         method = query['method']
         if 'data' in query:
-            data = json.loads(query['data'])
+            if type(query['data']) is dict:
+                data = query['data']
+            else:
+                data = json.loads(query['data'])
         # if method == 'sendHeader':
         #     self.sendHeader(sock, data)
         if method == 'sendBlock':

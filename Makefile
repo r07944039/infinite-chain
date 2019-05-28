@@ -1,12 +1,16 @@
-main.all: help
+all: help
 
 ## Run hw3
 run:
 	python3 main.py configs/config_hw3.json
 
-# Run node1
+## Run node1
 n1:
 	python3 main.py configs/config_hw3_2.json
+
+## Clean log file
+clean:
+	rm node_*
 
 # ## Run node2
 # n2:
