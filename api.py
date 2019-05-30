@@ -6,6 +6,7 @@ import globs
 from ecdsa import SigningKey, VerifyingKey, BadSignatureError
 
 from block.block import Block
+from transaction import Transaction
 
 def create_sock(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -60,7 +61,10 @@ def unpack(packet):
     # d = pickle.loads(packet)
     # return json.loads(d)
     # packet = json.loads(pickle.loads(packet))
-    packet = json.loads(packet)
+    try:
+        packet = json.loads(packet)
+    except:
+        packet = json.loads(pickle.loads(packet))
     return packet
 
 
@@ -231,6 +235,20 @@ class Broadcast:
         sock.close()
         if recv:
             print("sendTransaction: ", unpack(recv))
+
+    def sendtoaddress(self, n, arg):
+        sock = create_sock(n.host, n.p2p_port)
+        if sock == None:
+            return
+
+        sock.send(_pack({
+            "method": "sendtoaddress",
+            "data": arg
+        }))
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
+        if recv:
+            print("sendtoaddress: ", unpack(recv))
 
     # n is a online neighbor
     def hello(self, n, arg):
@@ -473,6 +491,37 @@ class Response:
         }
 
         sock.send(_pack(res))
+    
+    def sendtoaddress(self, sock, data):
+        fee = self.s.wallet.fee
+        cur_height = self.s.get_height()
+        chain = self.s.block.get_chain()
+        pubk = self.s.wallet.pub_key
+        nonce = chain[cur_height].nonce
+        to = data['address']
+        value = data['amount']
+
+        # Setup a transaction
+        t = Transaction(fee, nonce, pubk, to, value, self.s.wallet)
+        
+        # sendTransaction
+        arg = {
+            "nonce": t.nonce,
+            "sender_pub_key": t.pubk,
+            "to": t.to,
+            "value": t.value,
+            "fee": t.fee,
+            "signature": t.signature
+        }
+        self.s.broadcast(self.s.apib.sendTransaction, arg)
+        
+        # 先寫死
+        error = 0
+
+        res = {
+            "error": error
+        }
+        sock.send(_pack(res))
 
     def echo(self, sock, data):
         print('echo')
@@ -503,6 +552,8 @@ class Response:
             self.sendTransaction(sock, data)
         elif method == 'getbalance':
             self.getbalance(sock, data)
+        elif method == 'sendtoaddress':
+            self.sendtoadress(sock, data)
         elif method == 'hello':
             self.echo(sock, data)
         else:
