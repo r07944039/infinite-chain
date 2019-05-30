@@ -61,8 +61,11 @@ def unpack(packet):
     # d = pickle.loads(packet)
     # return json.loads(d)
     # packet = json.loads(pickle.loads(packet))
+    
+    # 助教傳來的格式
     try:
         packet = json.loads(packet)
+    # 我們自己 socket 的格式
     except:
         packet = json.loads(pickle.loads(packet))
     return packet
