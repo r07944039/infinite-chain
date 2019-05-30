@@ -40,8 +40,14 @@ class Miner:
                 nonce = nonce[1:]
             mine = pre_string + nonce
 
+        # TODO: 要在這邊 verify 挖出來的 block 中
+        # transaction 是否跟最新的 transaction 一樣 (從 node 拿 trans 出來 verify)
+        # 如果一樣才加入 blockchain 不然就 pass
+
+
         # Add block into your block chain
         # FIXME: 寫死 transactions & balance 亂寫
+        # TODO: 把 balance 存進去
         new_block = Block(block.block_hash, sha256(""), header.target, nonce, self.beneficiary, [], 0)
         self.node.add_new_block(new_block, False)
 
@@ -61,6 +67,9 @@ class Miner:
             "transactions": header.transactions,
             'block_height': height
         }
+
+        # TODO: sendBlock 之後要等對方回傳 error = 0 
+        # 才能 Add new block, 加玩新的 block 後才能繼續挖
         self.p2p.broadcast(self.p2p.apib.sendBlock, arg)
 
         print(nonce)

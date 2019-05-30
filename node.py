@@ -24,8 +24,7 @@ class Node():
         self.trans_sig_list = []
         self.trans_pool = {
             "waiting": [],
-            "invalid": [],
-            "tmp": []
+            "invalid": []
         }
         
         f_name = '{}{}'.format("node_", str(p2p_port))
@@ -33,6 +32,12 @@ class Node():
 
     def add_new_block(self, block, clear):
         self.lock.acquire()
+
+        # TODO:
+        # 1. waiting list 裡面有這個 trans 的都要排除
+        # 2. 把 invalid list 的再檢查一次，看能不能移到 waiting 裡面
+        # 3. 把確定的 trans_sig 塞進 self.trans_sig_list 裡面
+        
         self.chain.append(block)
         self.height += 1
         self.lock.release()

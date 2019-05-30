@@ -29,10 +29,10 @@ class Transaction():
             "value": self.value
         }
 
-    def verify_signature(self, trans):
-        vk = VerifyingKey.from_string(bytes.fromhex(trans.sender_pub_key), curve=SECP256k1)
+    def verify_signature(self):
+        vk = VerifyingKey.from_string(bytes.fromhex(self.sender_pub_key), curve=SECP256k1)
         try:
-            vk.verify(bytes.fromhex(trans.signature), bytes(trans.msg,'utf-8'))
+            vk.verify(bytes.fromhex(self.signature), bytes(self.msg,'utf-8'))
             return True
         except BadSignatureError:
             return False

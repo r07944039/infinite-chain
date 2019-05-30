@@ -3,6 +3,7 @@ import socket
 import hashlib
 import json
 import globs
+import os
 from ecdsa import SigningKey, VerifyingKey, BadSignatureError
 
 from block.block import Block
@@ -465,9 +466,11 @@ class Response:
         sock.send(_pack(res))
 
     def sendTransaction(self, sock, data):
-        # TODO: verify_signature
-        if verify_signature(data):
+        t = Transaction(data['fee'], data['nonce'], data['sender_pub_key'], data['to'], data['value'], data['wallet'])
+        
+        if t.verify_signature():
             error = 0
+            self.s.node.trans_pool['waiting'].append(t)
         else:
             error = 1
         
@@ -479,14 +482,17 @@ class Response:
 
     def getbalance(self, sock, data):
         chain = chain = self.s.node.get_chain()
-        cur_height = self.s.node.get_height()    
-        if data['address'] is self.s.wallet.pub_key:
-            error = 0
-            # 只使用最長鏈之中 confirmation 大於等於 3 的 block 來計算賬戶餘額
-            balance = chain[cur_height - 3].balance
-        else:
-            error = 0
-            balance = 0
+        cur_height = self.s.node.get_height()  
+        addr = data['address']
+            
+        # 只使用最長鏈之中 confirmation 大於等於 3 的 block 來計算賬戶餘額
+        if cur_height - 3 > 0:
+            balance = chain[cur_height - 3].balance[addr]
+        else: 
+            balance = chain[cur_height].balance[addr]
+        
+        # 先寫死
+        error = 0
 
         res = {
             'error': error,
@@ -500,7 +506,7 @@ class Response:
         cur_height = self.s.get_height()
         chain = self.s.block.get_chain()
         pubk = self.s.wallet.pub_key
-        nonce = chain[cur_height].nonce
+        nonce = os.urandom(8).hex()
         to = data['address']
         value = data['amount']
 
@@ -517,6 +523,11 @@ class Response:
         #     "signature": t.signature
         # }
         arg = t.get_transaction()
+        # TODO: 檢查餘額
+        if is_valid():
+            self.s.node.trans_pool['waiting'].append(t)
+        else:
+            self.s.node.trans_pool['invalid'].append(t)
         self.s.broadcast(self.s.apib.sendTransaction, arg)
         
         # 先寫死
