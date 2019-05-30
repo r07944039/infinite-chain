@@ -39,7 +39,10 @@ for n in config['neighbor_list']:
 def main():
   # 建立 node
   # FIXME: 先寫死 transactions
-  node = Node(config['target'], config['p2p_port'], config['beneficiary'], [])
+  balance = {
+    config['wallet']['public_key']: 100
+  }
+  node = Node(config['target'], config['p2p_port'], config['beneficiary'], [], balance)
   
   # 開 wallet
   wallet = Wallet(config['wallet']['public_key'], config['wallet']['private_key'], config['fee'])

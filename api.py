@@ -61,7 +61,7 @@ def unpack(packet):
     # d = pickle.loads(packet)
     # return json.loads(d)
     # packet = json.loads(pickle.loads(packet))
-    
+
     # 助教傳來的格式
     try:
         packet = json.loads(packet)
@@ -508,14 +508,15 @@ class Response:
         t = Transaction(fee, nonce, pubk, to, value, self.s.wallet)
         
         # sendTransaction
-        arg = {
-            "nonce": t.nonce,
-            "sender_pub_key": t.pubk,
-            "to": t.to,
-            "value": t.value,
-            "fee": t.fee,
-            "signature": t.signature
-        }
+        # arg = {
+        #     "nonce": t.nonce,
+        #     "sender_pub_key": t.pubk,
+        #     "to": t.to,
+        #     "value": t.value,
+        #     "fee": t.fee,
+        #     "signature": t.signature
+        # }
+        arg = t.get_transaction()
         self.s.broadcast(self.s.apib.sendTransaction, arg)
         
         # 先寫死

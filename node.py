@@ -12,11 +12,11 @@ def sha256(data):
     return m.hexdigest()
 
 class Node():
-    def __init__(self, target, p2p_port, beneficiary, transactions):
+    def __init__(self, target, p2p_port, beneficiary, transactions, balance):
         # Genesis block
         # 要吃 config.js
         # 一開始 balance 是 0
-        block = Block('0000000000000000000000000000000000000000000000000000000000000000', sha256(""), target, '00002321', beneficiary, transactions, 0)
+        block = Block('0000000000000000000000000000000000000000000000000000000000000000', sha256(""), target, '00002321', beneficiary, transactions, balance)
         self.chain = []
         self.chain.append(block)
         self.height = 0
