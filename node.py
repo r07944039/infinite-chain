@@ -21,6 +21,12 @@ class Node():
         self.chain.append(block)
         self.height = 0
         self.lock = threading.Lock()
+        self.trans_sig_list = []
+        self.trans_pool = {
+            "waiting": [],
+            "invalid": [],
+            "tmp": []
+        }
         
         f_name = '{}{}'.format("node_", str(p2p_port))
         self.file_name = os.path.join(os.getcwd(), f_name)
