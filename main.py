@@ -42,11 +42,10 @@ def main():
   balance = {
     config['wallet']['public_key']: 100
   }
-  node = Node(config['target'], config['p2p_port'], config['beneficiary'], [], balance)
-  
-  # 開 wallet
-  wallet = Wallet(config['wallet']['public_key'], config['wallet']['private_key'], config['fee'])
 
+  wallet = Wallet(config['wallet']['public_key'], config['wallet']['private_key'], config['fee'])
+  node = Node(config['target'], config['p2p_port'], config['beneficiary'], [], balance, wallet)
+  
   # 開啟 port listening
   s1 = server.Server(HOST, config['p2p_port'], 'p2p', node, wallet)
   s2 = server.Server(HOST, config['user_port'], 'user', node, wallet)

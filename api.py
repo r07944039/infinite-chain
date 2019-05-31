@@ -50,8 +50,8 @@ def unpack(packet):
 
     # print(packet.decode("utf-8"))
     
-    print(type(packet))
-    print(packet)
+    # print(type(packet))
+    # print(packet)
     
     # print(type(packet))
     # if type(packet) is bytes:
@@ -221,7 +221,7 @@ class Broadcast:
                     # FIXME: 因為 transactions 的部分還沒處理好，目前先直接寫死說每個都是空字串
                     # 不知道為什麼目前同步只會成功一點 不會全部成功...
                     # balance 先亂寫 = =
-                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [], 0)
+                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [], {})
                     # 後面傳的 True 代表要把整個檔案重寫
                     self.s.node.add_new_block(new_block, True)
                     print("done")

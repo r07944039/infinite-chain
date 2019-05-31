@@ -12,7 +12,7 @@ def sha256(data):
     return m.hexdigest()
 
 class Node():
-    def __init__(self, target, p2p_port, beneficiary, transactions, balance):
+    def __init__(self, target, p2p_port, beneficiary, transactions, balance, wallet):
         # Genesis block
         # 要吃 config.js
         # 一開始 balance 是 0
@@ -26,6 +26,7 @@ class Node():
             "waiting": [],
             "invalid": []
         }
+        self.wallet = wallet
         
         f_name = '{}{}'.format("node_", str(p2p_port))
         self.file_name = os.path.join(os.getcwd(), f_name)
@@ -33,10 +34,23 @@ class Node():
     def add_new_block(self, block, clear):
         self.lock.acquire()
 
-        # TODO:
-        # 1. waiting list 裡面有這個 trans 的都要排除
-        # 2. 把 invalid list 的再檢查一次，看能不能移到 waiting 裡面
-        # 3. 把確定的 trans_sig 塞進 self.trans_sig_list 裡面
+        # TODO: 寫好後要用助教的 code 測試
+
+        # waiting list 裡面有這個 trans 的都要排除
+        delete = [tran for tran in block.block_header.transactions if tran in self.trans_pool['waiting']]
+        for tran in delete:
+            self.trans_pool['waiting'].remove(tran)
+        
+        # 把 invalid list 的再檢查一次，看能不能移到 waiting 裡面
+        for tran in self.trans_pool['invalid']:
+            if tran.value + self.wallet.fee <= block.block_header.balance:
+                self.trans_pool['waiting'].append(tran)
+                self.trans_pool['invalid'].remove(tran)
+        
+        # 把確定的 trans_sig 塞進 self.trans_sig_list 裡面
+        for tran in block.block_header.transactions:
+            self.trans_sig_list.append(tran.signature)
+
         
         self.chain.append(block)
         self.height += 1
@@ -88,7 +102,7 @@ class Node():
         for h in header:
             prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(h[:-1])
             # FIXME: balance 亂寫成 0
-            block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [], 0)
+            block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [], {})
             self.chain.append(block)
             self.height += 1      
         
