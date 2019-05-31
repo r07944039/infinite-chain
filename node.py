@@ -51,7 +51,7 @@ class Node():
         
         # 把確定的 trans_sig 塞進 self.trans_sig_list 裡面
         for tran in block.block_header.transactions:
-            self.trans_sig_list.append(tran.signature)
+            self.trans_sig_list.append(tran['signature'])
 
         
         self.chain.append(block)
@@ -62,6 +62,19 @@ class Node():
             return
         else: 
             self.write_file(block.block_header.header)
+
+    def get_trans(self):
+        self.lock.acquire()
+        waiting = self.trans_pool['waiting']
+        self.lock.release()
+        return waiting
+
+    def get_trans_hash(self):
+        waiting = self.get_trans()
+        w_hash = ""
+        for trans in waiting:
+            w_hash += trans.signature
+        return sha256(w_hash), waiting
 
     def get_chain(self):
         self.lock.acquire()
