@@ -219,49 +219,49 @@ class Broadcast:
             if r['error'] == 0:
                 self.s.node.add_new_block(new_block, False)
                 # print("Add new block!")
+    # 沒有用到此功能
+    # def getBlocks(self, n, arg):
+    #     # print(arg)
 
-    def getBlocks(self, n, arg):
-        # print(arg)
+    #     d = json.dumps({
+    #         'hash_count': arg['hash_count'],
+    #         'hash_begin': arg['hash_begin'],
+    #         'hash_stop': arg['hash_stop']
+    #     })
+    #     req = _pack({
+    #         'method': 'getBlocks',
+    #         'data': d
+    #     })
+    #     sock = create_sock(n.host, n.p2p_port)
+    #     if sock == None:
+    #         return
+    #     sock.send(req)
+    #     print(req)
+    #     recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+    #     sock.close()
+    #     if recv:
+    #         r = unpack(recv)
+    #         result = r['result']
+    #         print('getBlocks: ', r)
 
-        d = json.dumps({
-            'hash_count': arg['hash_count'],
-            'hash_begin': arg['hash_begin'],
-            'hash_stop': arg['hash_stop']
-        })
-        req = _pack({
-            'method': 'getBlocks',
-            'data': d
-        })
-        sock = create_sock(n.host, n.p2p_port)
-        if sock == None:
-            return
-        sock.send(req)
-        print(req)
-        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
-        sock.close()
-        if recv:
-            r = unpack(recv)
-            result = r['result']
-            print('getBlocks: ', r)
-
-            if len(result) > 0:
-                # check for the branch 
-                for data in result:
-                    prev_block = data['prev_block']
-                    transactions_hash = data['transactions_hash']
-                    beneficiary = data['beneficiary']
-                    target = data['target']
-                    nonce = data['nonce']
-                    transactions = data['transactions']
-                    balance = data['balance']
-                    # prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
-                    # FIXME: 因為 transactions 的部分還沒處理好，目前先直接寫死說每個都是空字串
-                    # 不知道為什麼目前同步只會成功一點 不會全部成功...
-                    # balance 先亂寫 = =
-                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, transactions, balance.copy())
-                    # 後面傳的 True 代表要把整個檔案重寫
-                    self.s.node.add_new_block(new_block, True)
-                    print("done")
+    #         if len(result) > 0:
+    #             # check for the branch 
+    #             for data in result:
+    #                 prev_block = data['prev_block']
+    #                 transactions_hash = data['transactions_hash']
+    #                 beneficiary = data['beneficiary']
+    #                 target = data['target']
+    #                 nonce = data['nonce']
+    #                 transactions = data['transactions']
+    #                 balance = data['balance']
+    #                 # prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
+    #                 # FIXME: 因為 transactions 的部分還沒處理好，目前先直接寫死說每個都是空字串
+    #                 # 不知道為什麼目前同步只會成功一點 不會全部成功...
+    #                 # balance 先亂寫 = =
+    #                 new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, transactions, balance.copy())
+    #                 # 後面傳的 True 代表要把整個檔案重寫
+    #                 self.s.node.add_new_block(new_block, True)
+    #                 print("done")
 
     def sendTransaction(self, n, arg):
         sock = create_sock(n.host, n.p2p_port)
@@ -372,7 +372,7 @@ class Response:
         block_header = str(version).zfill(8) + prev_block + transactions_hash + target + nonce + beneficiary
         block_hash = sha256(block_header)
 
-        need_getBlocks = False
+        #need_getBlocks = False
         error = 0
 
         height = self.s.node.get_height()
@@ -393,7 +393,7 @@ class Response:
                 error = 1
             if verify_prev_block(prev_block, chain, height):
                 print("prev_block")
-                need_getBlocks = True
+                #need_getBlocks = True
                 error = 1
 
             balance = chain[-1].block_header.balance
@@ -419,19 +419,19 @@ class Response:
                 balance[tx.sender_pub_key] -= tx.fee + tx.value
                 balance[tx.to] += tx.value
 
-
-            if need_getBlocks:
-                cur_height = height
-                cur_hash = chain[cur_height].block_hash
-                hash_count = block_height - cur_height
-                hash_begin = cur_hash
-                hash_stop = block_hash
-                arg = {
-                    'hash_count': hash_count,
-                    'hash_begin': hash_begin,
-                    'hash_stop': hash_stop
-                }
-                self.s.broadcast(self.s.apib.getBlocks, arg)
+            # 這個不需要，因為我們靠sendblock的先挖先贏，就能強勢同步其他node
+            # if need_getBlocks:
+            #     cur_height = height
+            #     cur_hash = chain[cur_height].block_hash
+            #     hash_count = block_height - cur_height
+            #     hash_begin = cur_hash
+            #     hash_stop = block_hash
+            #     arg = {
+            #         'hash_count': hash_count,
+            #         'hash_begin': hash_begin,
+            #         'hash_stop': hash_stop
+            #     }
+            #     self.s.broadcast(self.s.apib.getBlocks, arg)
         
         res = {
             'error': error
@@ -447,64 +447,64 @@ class Response:
            
             self.s.node.add_new_block(new_block, False)
 
+    # 沒有用到此功能
+    # def getBlocks(self, sock, data):
+    #     hash_count = data['hash_count']
+    #     hash_begin = data['hash_begin']
+    #     hash_stop = data['hash_stop']
 
-    def getBlocks(self, sock, data):
-        hash_count = data['hash_count']
-        hash_begin = data['hash_begin']
-        hash_stop = data['hash_stop']
+    #     # 先找到那個 block 再回 block headers list
+    #     result = []
+    #     count = 0
+    #     append = 0
 
-        # 先找到那個 block 再回 block headers list
-        result = []
-        count = 0
-        append = 0
+    #     chain = self.s.node.get_chain()
 
-        chain = self.s.node.get_chain()
-
-        # Brute force QAQ
-        for block in chain:
-            # 到尾了
-            if hash_stop == block.block_hash:
-                back = {
-                    "version": 2,
-                    "prev_block": block.block_header.prev_block,
-                    "transactions_hash": block.block_header.transactions_hash,
-                    "beneficiary": block.block_header.beneficiary,
-                    "target": block.block_header.target,
-                    "nonce": block.block_header.nonce,
-                    "transactions": block.block_header.transactions,
-                    "balance": block.block_header.balance.copy()
-                }
-                result.append(back)
-                append = 0
-                break
-            if append == 1:
-                back = {
-                    "version": 2,
-                    "prev_block": block.block_header.prev_block,
-                    "transactions_hash": block.block_header.transactions_hash,
-                    "beneficiary": block.block_header.beneficiary,
-                    "target": block.block_header.target,
-                    "nonce": block.block_header.nonce,
-                    "transactions": block.block_header.transactions,
-                    "balance": block.block_header.balance.copy()
-                }
-                result.append(back)
-                #result.append(block.block_header.header)
-            # 如果到 begin 的下一個開始計
-            if hash_begin == block.block_hash:
-                append = 1
-        # debug(result)
-        # 如果找不到結果就回傳錯誤
-        if len(result) == 0:
-            error = 1
-        else:
-            error = 0
-        res = {
-            'result': result,
-            'error': error
-        }
+    #     # Brute force QAQ
+    #     for block in chain:
+    #         # 到尾了
+    #         if hash_stop == block.block_hash:
+    #             back = {
+    #                 "version": 2,
+    #                 "prev_block": block.block_header.prev_block,
+    #                 "transactions_hash": block.block_header.transactions_hash,
+    #                 "beneficiary": block.block_header.beneficiary,
+    #                 "target": block.block_header.target,
+    #                 "nonce": block.block_header.nonce,
+    #                 "transactions": block.block_header.transactions,
+    #                 "balance": block.block_header.balance.copy()
+    #             }
+    #             result.append(back)
+    #             append = 0
+    #             break
+    #         if append == 1:
+    #             back = {
+    #                 "version": 2,
+    #                 "prev_block": block.block_header.prev_block,
+    #                 "transactions_hash": block.block_header.transactions_hash,
+    #                 "beneficiary": block.block_header.beneficiary,
+    #                 "target": block.block_header.target,
+    #                 "nonce": block.block_header.nonce,
+    #                 "transactions": block.block_header.transactions,
+    #                 "balance": block.block_header.balance.copy()
+    #             }
+    #             result.append(back)
+    #             #result.append(block.block_header.header)
+    #         # 如果到 begin 的下一個開始計
+    #         if hash_begin == block.block_hash:
+    #             append = 1
+    #     # debug(result)
+    #     # 如果找不到結果就回傳錯誤
+    #     if len(result) == 0:
+    #         error = 1
+    #     else:
+    #         error = 0
+    #     res = {
+    #         'result': result,
+    #         'error': error
+    #     }
         
-        sock.send(_pack(res))
+    #     sock.send(_pack(res))
 
     def getBlockCount(self, sock):
         height = self.s.node.get_height()
