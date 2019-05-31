@@ -24,9 +24,6 @@ class Miner:
         chain = self.node.get_chain()
         block = chain[height]
         header = block.block_header
-        # FIXME: 刪掉 merkle tree，不知道會不會有什麼影響
-        # pre_string = header.version + block.block_hash + \
-        #     "0000000000000000000000000000000000000000000000000000000000000000" + header.target
         pre_string = header.version + block.block_hash + sha256("") + header.target
         nonce = os.urandom(4).hex()
         nonce_count = int(nonce, 16)
@@ -46,7 +43,7 @@ class Miner:
 
 
         # Add block into your block chain
-        # FIXME: 寫死 transactions & balance 亂寫
+        # TODO: 寫死 transactions & balance 亂寫
         # TODO: 把 balance 存進去
         balance = header.balance.copy()
         new_block = Block(block.block_hash, sha256(""), header.target, nonce, self.beneficiary, [], balance)

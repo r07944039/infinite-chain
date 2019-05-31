@@ -73,9 +73,6 @@ def unpack(packet):
 
 
 def header_to_items(header):
-    '''
-        FIXME: 寫的跟助教文件不太一樣 ...
-    '''
     prev_block = header[8:72]
     transactions_hash = header[72:136]
     target = header[136:-136] # 64
@@ -620,8 +617,9 @@ class Response:
         #     "signature": t.signature
         # }
         arg = t.get_transaction()
+        
         # TODO: 檢查餘額
-        if is_valid():
+        if t.fee + t.value <= chain[cur_height].balance:
             self.s.node.trans_pool['waiting'].append(t)
         else:
             self.s.node.trans_pool['invalid'].append(t)
