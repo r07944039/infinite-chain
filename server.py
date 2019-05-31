@@ -29,7 +29,7 @@ class Server:
         # keep pinging neighbors
         threading.Thread(target=self.__retry_neighbors).start()
         self.node = node
-        self.wallet = wallet
+        # self.wallet = wallet
         # loop through all online neighbor and call callback function
     def broadcast(self, callback, arg):
       for n in self.neighbors:
@@ -45,10 +45,13 @@ class Server:
       for n in self.neighbors:
         if n.online == True and self.name == P2P and n.p2p_sock != None:
           self.__sock_broadcast_handler(callback, n, arg)
-          # threading.Thread(
-          #   target=self.__sock_broadcast_handler,
-          #   args=(callback, n, arg,)
-          # ).start()
+          # 在這邊基本上 neighbor 只會有一個所以這個 for 迴圈應該只會執行一次
+          # 所以在發現大家都沒有在線上的狀況應該要回傳 False 
+          # 就不用跟別人比較就能 add new block
+          return True
+        else:
+          return False
+      
     
     def send_to(self, callback, host, port, arg):
       for n in self.neighbors:

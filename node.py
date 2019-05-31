@@ -34,6 +34,8 @@ class Node():
     def add_new_block(self, block, clear):
         self.lock.acquire()
 
+        # print(block.block_header.balance)
+
         # TODO: 寫好後要用助教的 code 測試
 
         # waiting list 裡面有這個 trans 的都要排除

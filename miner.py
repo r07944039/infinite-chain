@@ -46,6 +46,7 @@ class Miner:
         # TODO: 寫死 transactions & balance 亂寫
         # TODO: 把 balance 存進去
         balance = header.balance.copy()
+        # print(balance)
         new_block = Block(block.block_hash, sha256(""), header.target, nonce, self.beneficiary, [], balance)
         # self.node.add_new_block(new_block, False)
 
@@ -70,8 +71,8 @@ class Miner:
         # sendBlock 之後要等對方回傳 error = 0 
         # 才能 Add new block, 加完新的 block 後才能繼續挖
         # Add new block 的部分移到 api 裡面做
-        self.p2p.block_broadcast(self.p2p.apib.sendBlock, arg)
-        # self.node.add_new_block(new_block, False)
+        if not self.p2p.block_broadcast(self.p2p.apib.sendBlock, arg):
+            self.node.add_new_block(new_block, False)
 
         print(nonce)
         return nonce

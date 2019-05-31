@@ -573,16 +573,16 @@ class Response:
         sock.send(_pack(res))
     
     def sendtoaddress(self, sock, data):
-        fee = self.s.wallet.fee
-        cur_height = self.s.get_height()
-        chain = self.s.block.get_chain()
-        pubk = self.s.wallet.pub_key
+        fee = self.s.node.wallet.fee
+        cur_height = self.s.node.get_height()
+        chain = self.s.node.get_chain()
+        pubk = self.s.node.wallet.pub_key
         nonce = os.urandom(8).hex()
         to = data['address']
         value = data['amount']
 
         # Setup a transaction
-        t = Transaction(fee, nonce, pubk, to, value, self.s.wallet)
+        t = Transaction(fee, nonce, pubk, to, value, self.s.node.wallet)
         
         # sendTransaction
         # arg = {
@@ -596,7 +596,8 @@ class Response:
         arg = t.get_transaction()
 
         # TODO: 檢查餘額
-        if t.fee + t.value <= chain[cur_height].balance:
+        print(chain[cur_height].block_header.balance)
+        if t.fee + t.value <= chain[cur_height].block_header.balance[self.s.node.wallet.pub_key]:
             self.s.node.trans_pool['waiting'].append(t)
         else:
             self.s.node.trans_pool['invalid'].append(t)
@@ -640,7 +641,7 @@ class Response:
         elif method == 'getbalance':
             self.getbalance(sock, data)
         elif method == 'sendtoaddress':
-            self.sendtoadress(sock, data)
+            self.sendtoaddress(sock, data)
         elif method == 'hello':
             self.echo(sock, data)
         else:

@@ -14,7 +14,7 @@ class Transaction():
         self.sender_pub_key = sender_pub_key
         self.to = to
         self.value = value
-        self.msg = sha256(self.nonce + self.sender_pub_key + self.to + self.value + self.fee)
+        self.msg = sha256(str(self.nonce )+ self.sender_pub_key + self.to + str(self.value) + str(self.fee))
         
         sk = SigningKey.from_string(bytes.fromhex(wallet.priv_key), curve=SECP256k1)
         self.signature = sk.sign(bytes(self.msg,'utf-8')).hex()
