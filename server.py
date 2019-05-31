@@ -38,6 +38,17 @@ class Server:
             target=self.__sock_broadcast_handler,
             args=(callback, n, arg,)
           ).start()
+
+    # 會等收到回應後才做事的 broadcast
+    # 為了在 mine 到 block 後可以給別人做檢查寫的
+    def block_broadcast(self, callback, arg):
+      for n in self.neighbors:
+        if n.online == True and self.name == P2P and n.p2p_sock != None:
+          self.__sock_broadcast_handler(callback, n, arg)
+          # threading.Thread(
+          #   target=self.__sock_broadcast_handler,
+          #   args=(callback, n, arg,)
+          # ).start()
     
     def send_to(self, callback, host, port, arg):
       for n in self.neighbors:

@@ -66,13 +66,15 @@ class Miner:
             "target": header.target,
             "nonce": header.nonce,
             "transactions": header.transactions,
-            'block_height': height + 1
+            'block_height': height + 1,
+            'balance': header.balance
         }
 
-        # TODO: sendBlock 之後要等對方回傳 error = 0 
-        # 才能 Add new block, 加玩新的 block 後才能繼續挖
-        self.p2p.broadcast(self.p2p.apib.sendBlock, arg)
-        self.node.add_new_block(new_block, False)
+        # sendBlock 之後要等對方回傳 error = 0 
+        # 才能 Add new block, 加完新的 block 後才能繼續挖
+        # Add new block 的部分移到 api 裡面做
+        self.p2p.block_broadcast(self.p2p.apib.sendBlock, arg)
+        # self.node.add_new_block(new_block, False)
 
         print(nonce)
         return nonce

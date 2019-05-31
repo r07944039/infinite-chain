@@ -188,6 +188,8 @@ class Broadcast:
         height = arg['block_height']
         # print(header)
 
+        new_block = Block(arg['prev_block'], arg['transactions_hash'], arg['target'], arg['nonce'], arg['beneficiary'], arg['transactions'], arg['balance'])
+
         d = json.dumps({
             "version": 2,
             "prev_block": arg['prev_block'],
@@ -212,6 +214,11 @@ class Broadcast:
         if recv:
             r = unpack(recv)
             print('sendBlock: ', r)
+
+            # 如果接到別人確認過沒問題的 block 才可以加入 chain 上
+            if r['error'] == 0:
+                self.s.node.add_new_block(new_block, False)
+                # print("Add new block!")
 
     def getBlocks(self, n, arg):
         # print(arg)
