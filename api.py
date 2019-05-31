@@ -40,29 +40,6 @@ def unpack(packet):
         但我們送回去時還是得用 pickle
 
     '''
-    # print(type(packet))
-
-    # if type(packet) is bytes:
-    #     packet = json.loads(pickle.loads(packet))
-    # elif type(packet) is str:
-    #     packet = packet.decode("utf-8")
-    #     packet = json.loads(packet)
-
-    # print(packet.decode("utf-8"))
-    
-    # print(type(packet))
-    # print(packet)
-    
-    # print(type(packet))
-    # if type(packet) is bytes:
-    #     packet = packet.decode("utf-8")
-    #     print(packet)
-    # print(packet)
-    # print(type(packet))
-    # d = pickle.loads(packet)
-    # return json.loads(d)
-    # packet = json.loads(pickle.loads(packet))
-
     # 助教傳來的格式
     try:
         packet = json.loads(packet)
@@ -617,7 +594,7 @@ class Response:
         #     "signature": t.signature
         # }
         arg = t.get_transaction()
-        
+
         # TODO: 檢查餘額
         if t.fee + t.value <= chain[cur_height].balance:
             self.s.node.trans_pool['waiting'].append(t)

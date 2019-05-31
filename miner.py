@@ -85,7 +85,8 @@ class Miner:
               'hash_stop': "00002ec4e51f5fede85226d18a91a413482d3f5f5cd5ebe6d4e0e23cf5510ab8"
             }
             # print(arg)
-            self.p2p.broadcast(self.p2p.apib.getBlocks, arg)
+            # 在 hw3 中不需要用 getBlocks 來同步
+            # self.p2p.broadcast(self.p2p.apib.getBlocks, arg)
         # print("done!!!!!")
         while True:
             # keep mining
