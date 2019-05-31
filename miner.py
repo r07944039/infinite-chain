@@ -24,7 +24,9 @@ class Miner:
         chain = self.node.get_chain()
         block = chain[height]
         header = block.block_header
-        pre_string = header.version + block.block_hash + sha256("") + header.target
+        trans_hash, dig_trans = self.node.get_trans_hash()
+
+        pre_string = header.version + block.block_hash + trans_hash + header.target
         nonce = os.urandom(4).hex()
         nonce_count = int(nonce, 16)
         mine = pre_string + nonce + header.beneficiary
@@ -41,13 +43,30 @@ class Miner:
         # transaction 是否跟最新的 transaction 一樣 (從 node 拿 trans 出來 verify)
         # 如果一樣才加入 blockchain 不然就 pass
 
+        balance = header.balance.copy()
+        for c in chain:
+            print("-----------\n", c.block_header.balance)
+        now_trans = self.node.get_trans()
+        save_trans = []
+        for tx in dig_trans:
+            if tx not in now_trans:
+                return
+            # if tx.sender_pub_key not in balance:
+            #     balance[tx.sender_pub_key] = 100
+            if tx.to not in balance:
+                balance[tx.to] = 0
+            if not api.verify_balance(balance[tx.sender_pub_key], tx.fee, tx.value):
+                return
+            else:
+                balance[tx.sender_pub_key] -= tx.fee + tx.value
+                balance[tx.to] += tx.value
+                save_trans.append(tx.get_transaction())
+        balance[self.beneficiary] += 1000
 
         # Add block into your block chain
-        # TODO: 寫死 transactions & balance 亂寫
+        # FIXME: 寫死 transactions & balance 亂寫
         # TODO: 把 balance 存進去
-        balance = header.balance.copy()
-        # print(balance)
-        new_block = Block(block.block_hash, sha256(""), header.target, nonce, self.beneficiary, [], balance)
+        new_block = Block(block.block_hash, trans_hash, header.target, nonce, self.beneficiary, save_trans, balance.copy())
         # self.node.add_new_block(new_block, False)
 
         # Boardcast new block to network
@@ -73,6 +92,7 @@ class Miner:
         # Add new block 的部分移到 api 裡面做
         if not self.p2p.block_broadcast(self.p2p.apib.sendBlock, arg):
             self.node.add_new_block(new_block, False)
+        # self.node.add_new_block(new_block, False)
 
         print(nonce)
         return nonce
@@ -86,8 +106,7 @@ class Miner:
               'hash_stop': "00002ec4e51f5fede85226d18a91a413482d3f5f5cd5ebe6d4e0e23cf5510ab8"
             }
             # print(arg)
-            # 在 hw3 中不需要用 getBlocks 來同步
-            # self.p2p.broadcast(self.p2p.apib.getBlocks, arg)
+            #self.p2p.broadcast(self.p2p.apib.getBlocks, arg)
         # print("done!!!!!")
         while True:
             # keep mining
