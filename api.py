@@ -558,9 +558,9 @@ class Response:
             
         # 只使用最長鏈之中 confirmation 大於等於 3 的 block 來計算賬戶餘額
         if cur_height - 3 > 0:
-            balance = chain[cur_height - 3].balance[addr]
+            balance = chain[cur_height - 3].block_header.balance[addr]
         else: 
-            balance = chain[cur_height].balance[addr]
+            balance = chain[cur_height].block_header.balance[addr]
         
         # 先寫死
         error = 0
