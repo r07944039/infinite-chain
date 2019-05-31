@@ -85,43 +85,68 @@ def header_to_items(header):
     return prev_block, transactions_hash, target, nonce, beneficiary
 
 
-def _verify_hash(block_hash, block_header):
-    # error = 0
-    if sha256(block_header) != block_hash:
-        # error = 1
+
+def verify_version(version):
+    if int(version) != 2:
         return True
     return False
 
+def verify_target(target, old_target, block_hash):
+    if target == old_target:
+        if block_hash <= target:
+            return False
+    return True
 
-def _verify_prev_block(prev_block, chain):
-    # error = 0
+def verify_hash(block_hash, block_header):
+    if sha256(block_header) != block_hash:
+        return True
+    return False
+
+def verify_prev_block(prev_block, chain, height):
+    if height == 0:
+        return False
     pre_block_hash = chain[-1].block_hash
     if prev_block != pre_block_hash:
-        # error = 1
         return True
     return False
 
+# def verify_height(new_height, cur_height):
+#     if cur_height != int(new_height) - 1:
+#         return True
+#     return False
 
-def _verify_height(new_height, cur_height):
-    # cur_height = node_height
-
-    if cur_height != int(new_height) - 1:
-        return True
-    return False
-
-
-def _verify_shorter(new_height, cur_height):
+def verify_shorter(new_height, cur_height):
     if cur_height < int(new_height):
         return False
     return True
 
-def verify_signature(self, trans):
-    vk = VerifyingKey.from_pem(trans.sender_pub_key)
+def verify_transection_hash(transactions,transactions_hash):
+    sig = ""
+    for trans in transactions:
+        sig += trans.signature
+
+    if sha256(sig) != transactions_hash:
+        return True
+    return False   
+
+def verify_signature(pub_key, sig, msg):
+    vk = VerifyingKey.from_string(bytes.fromhex(pub_key), curve=SECP256k1)
     try:
-        vk.verify(trans.signature, trans.msg)
+        vk.verify(bytes.fromhex(sig), bytes(msg,'utf-8'))
         return True
     except BadSignatureError:
         return False
+
+def verify_not_exist_signature(sig_list, sig):
+    if sig in sig_list:
+        return False
+    return True
+
+def verify_balance(balance, fee, value):
+    if balance < fee + value:
+        return False
+    return True
+
 
 class Broadcast:
     def __init__(self, server):
@@ -213,15 +238,20 @@ class Broadcast:
             print('getBlocks: ', r)
 
             if len(result) > 0:
-                # print(len(result))
-                #result = max(result[0], result[1])
                 # check for the branch 
-                for header in result:
-                    prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
+                for data in result:
+                    prev_block = data['prev_block']
+                    transactions_hash = data['transactions_hash']
+                    beneficiary = data['beneficiary']
+                    target = data['target']
+                    nonce = data['nonce']
+                    transactions = data['transactions']
+                    balance = data['balance']
+                    # prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(header)
                     # FIXME: 因為 transactions 的部分還沒處理好，目前先直接寫死說每個都是空字串
                     # 不知道為什麼目前同步只會成功一點 不會全部成功...
                     # balance 先亂寫 = =
-                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, [], {})
+                    new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, transactions, balance.copy())
                     # 後面傳的 True 代表要把整個檔案重寫
                     self.s.node.add_new_block(new_block, True)
                     print("done")
@@ -322,36 +352,66 @@ class Response:
     #     sock.send(_pack(res))
 
     def sendBlock(self, sock, data, block_height):
-        # block_hash = data['block_hash']
-        # block_header = data['block_header']
-        # block_height = data['block_height']
-        # prev_block, transactions_hash, target, nonce, beneficiary = header_to_items(block_header)
-        # print(type(data))
-
+        version =  data['version']
         prev_block = data['prev_block']
+        transactions_hash = data['transactions_hash']
+        beneficiary = data['beneficiary']
+        target = data['target']
+        nonce = data['nonce']
+        transactions = data['transactions']
+        print("transactions ", transactions)
+
         # header 自己用拼的
-        block_header = str(data['version']).zfill(8)+ prev_block + data['transactions_hash'] + data['target'] + data['nonce'] + data['beneficiary']
+        block_header = str(version).zfill(8) + prev_block + transactions_hash + target + nonce + beneficiary
         block_hash = sha256(block_header)
 
         need_getBlocks = False
+        error = 0
 
         height = self.s.node.get_height()
         chain = self.s.node.get_chain()
 
-        # drop and triger sendHeader back
-        if _verify_shorter(block_height, height):
-            pass
-
+        if verify_shorter(block_height, height):
+            print("shorter")
+            error = 1
         else:
+            if verify_version(version):
+                print("version")
+                error = 1
+            if verify_target(target, chain[-1].block_header.target, block_hash):
+                print("target")
+                error = 1
+            if verify_transection_hash(transactions,transactions_hash):
+                print("t_hash")
+                error = 1
+            if verify_prev_block(prev_block, chain, height):
+                print("prev_block")
+                need_getBlocks = True
+                error = 1
 
-            if _verify_height(block_height, height):
-                need_getBlocks = True
-            if _verify_prev_block(prev_block, chain):
-                need_getBlocks = True
-                error = 1
-            if _verify_hash(block_hash, block_header):
-                # 只是本人 hash 值不對，感覺可以直接 drop 掉
-                error = 1
+            balance = chain[-1].block_header.balance
+
+            for tx in transactions:
+                if tx.sender_pub_key not in balance:
+                    balance[tx.sender_pub_key] = 0
+                if tx.to not in balance:
+                    balance[tx.to] = 0
+                if not verify_signature(tx.sender_pub_key, tx.signature, tx.msg):
+                    print("sig")
+                    error = 1
+                    break
+                if not verify_not_exist_signature(self.s.node.trans_sig_list, tx.signature):
+                    print("exist")
+                    error = 1
+                    break
+                if not verify_balance(balance[tx.sender_pub_key], tx.fee, tx.value):
+                    print("balance")
+                    error = 1
+                    break
+                
+                balance[tx.sender_pub_key] -= tx.fee + tx.value
+                balance[tx.to] += tx.value
+
 
             if need_getBlocks:
                 cur_height = height
@@ -366,11 +426,20 @@ class Response:
                 }
                 self.s.broadcast(self.s.apib.getBlocks, arg)
         
-        error = 0
         res = {
             'error': error
         }
         sock.send(_pack(res))
+
+        if not error:
+            if beneficiary not in balance:
+                balance[beneficiary] = 1000
+            else:
+                balance[beneficiary] += 1000
+            new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, transactions, balance.copy())
+           
+            self.s.node.add_new_block(new_block, False)
+
 
     def getBlocks(self, sock, data):
         hash_count = data['hash_count']
@@ -388,11 +457,32 @@ class Response:
         for block in chain:
             # 到尾了
             if hash_stop == block.block_hash:
-                result.append(block.block_header.header)
+                back = {
+                    "version": 2,
+                    "prev_block": block.block_header.prev_block,
+                    "transactions_hash": block.block_header.transactions_hash,
+                    "beneficiary": block.block_header.beneficiary,
+                    "target": block.block_header.target,
+                    "nonce": block.block_header.nonce,
+                    "transactions": block.block_header.transactions,
+                    "balance": block.block_header.balance.copy()
+                }
+                result.append(back)
                 append = 0
                 break
             if append == 1:
-                result.append(block.block_header.header)
+                back = {
+                    "version": 2,
+                    "prev_block": block.block_header.prev_block,
+                    "transactions_hash": block.block_header.transactions_hash,
+                    "beneficiary": block.block_header.beneficiary,
+                    "target": block.block_header.target,
+                    "nonce": block.block_header.nonce,
+                    "transactions": block.block_header.transactions,
+                    "balance": block.block_header.balance.copy()
+                }
+                result.append(back)
+                #result.append(block.block_header.header)
             # 如果到 begin 的下一個開始計
             if hash_begin == block.block_hash:
                 append = 1
