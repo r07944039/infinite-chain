@@ -97,7 +97,7 @@ def verify_shorter(new_height, cur_height):
 def verify_transection_hash(transactions,transactions_hash):
     sig = ""
     for trans in transactions:
-        sig += trans.signature
+        sig += trans['signature']
 
     if sha256(sig) != transactions_hash:
         return True
