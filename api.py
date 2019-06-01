@@ -355,10 +355,9 @@ class Response:
         target = data['target']
         nonce = data['nonce']
         transactions = data['transactions']
-        print("transactions ", transactions)
 
         # header 自己用拼的
-        block_header = str(version).zfill(8) + prev_block + transactions_hash + target + nonce + beneficiary
+        block_header = str(version).zfill(8) + prev_block + transactions_hash + target + hex(nonce)[2:].zfill(8) + beneficiary
         block_hash = sha256(block_header)
 
         #need_getBlocks = False
@@ -374,7 +373,7 @@ class Response:
             if verify_version(version):
                 print("version")
                 error = 1
-            if verify_target(target, chain[-1].block_header.target, block_hash):
+            if verify_target(target, chain[height].block_header.target, block_hash):
                 print("target")
                 error = 1
             if verify_transection_hash(transactions,transactions_hash):
@@ -382,7 +381,6 @@ class Response:
                 error = 1
             if verify_prev_block(prev_block, chain, height):
                 print("prev_block")
-                #need_getBlocks = True
                 error = 1
 
             balance = chain[-1].block_header.balance
@@ -432,7 +430,7 @@ class Response:
                 balance[beneficiary] += 1000
             for tx in transactions:
                 balance[beneficiary] += tx.fee
-            new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, transactions, balance.copy())
+            new_block = Block(prev_block, transactions_hash, target, hex(nonce)[2:].zfill(8), beneficiary, transactions, balance.copy())
            
             self.s.node.add_new_block(new_block, False)
         else:
@@ -559,7 +557,7 @@ class Response:
         logging.info("Received sendTransaction > " + json.dumps(data))
         t = Transaction(data['fee'], data['nonce'], data['sender_pub_key'], data['to'], data['value'], self.s.node.wallet)
         
-        if t.verify_signature():
+        if t.verify_signature(t.sender_pub_key, t.signature, t.msg):
             error = 0
             self.s.node.trans_pool['waiting'].append(t)
         else:
