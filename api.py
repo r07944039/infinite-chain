@@ -389,10 +389,6 @@ class Response:
 
             for tx in transactions:
                 t = Transaction(tx['fee'], tx['nonce'], tx['sender_pub_key'], tx['to'], tx['value'], self.s.node.wallet)
-                if t.sender_pub_key not in balance:
-                    balance[t.sender_pub_key] = 0
-                if t.to not in balance:
-                    balance[t.to] = 0
                 if not t.verify_signature():
                     print("sig")
                     error = 1
@@ -566,6 +562,13 @@ class Response:
             self.s.node.trans_pool['waiting'].append(t)
         else:
             error = 1
+
+        chain = chain = self.s.node.get_chain()
+        cur_height = self.s.node.get_height()
+        if t.sender_pub_key not in chain[cur_height].block_header.balance:
+            chain[cur_height].block_header.balance[t.sender_pub_key] = 0
+        if t.to not in chain[cur_height].block_header.balance:
+            chain[cur_height].block_header.balance[t.to] = 0
         
         res = {
             'error': error
@@ -624,8 +627,11 @@ class Response:
         # }
         arg = t.get_transaction()
 
-        # TODO: 檢查餘額
-        # print(chain[cur_height].block_header.balance)
+        print(chain[cur_height].block_header.balance)
+        if t.sender_pub_key not in chain[cur_height].block_header.balance:
+            chain[cur_height].block_header.balance[t.sender_pub_key] = 0
+        if t.to not in chain[cur_height].block_header.balance:
+            chain[cur_height].block_header.balance[t.to] = 0
         if t.fee + t.value <= chain[cur_height].block_header.balance[self.s.node.wallet.pub_key]:
             self.s.node.trans_pool['waiting'].append(t)
         else:

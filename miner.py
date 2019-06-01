@@ -49,10 +49,6 @@ class Miner:
                 nonce = nonce[1:]
             mine = pre_string + nonce + header.beneficiary
 
-        # TODO: 要在這邊 verify 挖出來的 block 中
-        # transaction 是否跟最新的 transaction 一樣 (從 node 拿 trans 出來 verify)
-        # 如果一樣才加入 blockchain 不然就 pass
-
         balance = header.balance.copy()
         for c in chain:
             # print("-----------\n", c.block_header.balance)
@@ -62,10 +58,6 @@ class Miner:
         for tx in dig_trans:
             if tx not in now_trans:
                 return
-            # if tx.sender_pub_key not in balance:
-            #     balance[tx.sender_pub_key] = 100
-            if tx.to not in balance:
-                balance[tx.to] = 0
             if not api.verify_balance(balance[tx.sender_pub_key], tx.fee, tx.value):
                 return
             else:
@@ -74,9 +66,6 @@ class Miner:
                 save_trans.append(tx.get_transaction())
         balance[self.beneficiary] += 1000
 
-        # Add block into your block chain
-        # FIXME: 寫死 transactions & balance 亂寫
-        # TODO: 把 balance 存進去
         new_block = Block(block.block_hash, trans_hash, header.target, nonce, self.beneficiary, save_trans, balance.copy())
         # self.node.add_new_block(new_block, False)
 
