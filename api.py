@@ -89,7 +89,7 @@ def verify_hash(block_hash, block_header):
 def verify_prev_block(prev_block, chain, height):
     if height == 0:
         return False
-    pre_block_hash = chain[-1].block_hash
+    pre_block_hash = chain[height].block_hash
     if prev_block != pre_block_hash:
         return True
     return False
@@ -100,7 +100,7 @@ def verify_prev_block(prev_block, chain, height):
 #     return False
 
 def verify_shorter(new_height, cur_height):
-    if cur_height < int(new_height):
+    if cur_height <= int(new_height):
         return False
     return True
 
@@ -389,7 +389,7 @@ class Response:
 
             for tx in transactions:
                 t = Transaction(tx['fee'], tx['nonce'], tx['sender_pub_key'], tx['to'], tx['value'], self.s.node.wallet)
-                if not t.verify_signature():
+                if not t.verify_signature(t.sender_pub_key, t.signature, t.msg):
                     print("sig")
                     error = 1
                     break
@@ -430,6 +430,8 @@ class Response:
                 balance[beneficiary] = 1000
             else:
                 balance[beneficiary] += 1000
+            for tx in transactions:
+                balance[beneficiary] += tx.fee
             new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, transactions, balance.copy())
            
             self.s.node.add_new_block(new_block, False)

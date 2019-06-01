@@ -51,7 +51,6 @@ class Miner:
 
         balance = header.balance.copy()
         for c in chain:
-            # print("-----------\n", c.block_header.balance)
             logging.info("Balance > " + json.dumps(c.block_header.balance))
         now_trans = self.node.get_trans()
         save_trans = []
@@ -64,7 +63,13 @@ class Miner:
                 balance[tx.sender_pub_key] -= tx.fee + tx.value
                 balance[tx.to] += tx.value
                 save_trans.append(tx.get_transaction())
-        balance[self.beneficiary] += 1000
+        
+        if beneficiary not in balance:
+            balance[beneficiary] = 1000
+        else:
+            balance[beneficiary] += 1000
+        for tx in dig_trans:
+            balance[beneficiary] += tx.fee
 
         new_block = Block(block.block_hash, trans_hash, header.target, nonce, self.beneficiary, save_trans, balance.copy())
         # self.node.add_new_block(new_block, False)
