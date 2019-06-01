@@ -1,9 +1,19 @@
 import time
 import hashlib
+import logging
+import json
 import os
 
 from block.block import Block
 import api
+
+
+
+logging.basicConfig(level=logging.INFO,
+            format='%(levelname)-8s %(message)s')
+# 定義 handler 輸出 sys.stderr
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
 
 def sha256(data):
     m = hashlib.sha256()
@@ -45,7 +55,8 @@ class Miner:
 
         balance = header.balance.copy()
         for c in chain:
-            print("-----------\n", c.block_header.balance)
+            # print("-----------\n", c.block_header.balance)
+            logging.info("Balance > " + json.dumps(c.block_header.balance))
         now_trans = self.node.get_trans()
         save_trans = []
         for tx in dig_trans:
@@ -94,7 +105,7 @@ class Miner:
             self.node.add_new_block(new_block, False)
         # self.node.add_new_block(new_block, False)
 
-        print(nonce)
+        logging.info("Mined > " + nonce)
         return nonce
 
     def mine(self):

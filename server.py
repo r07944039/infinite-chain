@@ -33,7 +33,11 @@ class Server:
         # loop through all online neighbor and call callback function
     def broadcast(self, callback, arg):
       for n in self.neighbors:
-        if n.online == True and self.name == P2P and n.p2p_sock != None:
+        # 原本只允許 P2P port 來用這隻 api
+        # 但發現這樣在 sendtoaddress call sendTransaction 的時候會 self.name 會 == user
+        # 所以先把它註解掉
+        if n.online == True and n.p2p_sock != None:
+        # if n.online == True and self.name == P2P and n.p2p_sock != None:
           threading.Thread(
             target=self.__sock_broadcast_handler,
             args=(callback, n, arg,)

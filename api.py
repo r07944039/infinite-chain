@@ -4,10 +4,19 @@ import hashlib
 import json
 import globs
 import os
+import logging
 from ecdsa import SigningKey, VerifyingKey, BadSignatureError
 
 from block.block import Block
 from transaction import Transaction
+
+
+logging.basicConfig(level=logging.INFO,
+            format='[+]%(levelname)-8s %(message)s')
+# 定義 handler 輸出 sys.stderr
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+
 
 def create_sock(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,7 +25,8 @@ def create_sock(host, port):
     try:
         s.connect((host, port))
     except socket.error as err:
-        print("create_sock: " + host + ":" + str(port), ": ", err)
+        logging.error("create_sock: " + host + ":" + str(port) + ": " + err)
+        # print("create_sock: " + host + ":" + str(port), ": ", err)
         return None
     return s
 
@@ -178,7 +188,8 @@ class Broadcast:
             'height': height,
             'data': d
         })
-        print(req)
+        logging.info("Sent sendBlock > " + d)
+        # print(req)
         sock = create_sock(n.host, n.p2p_port)
         if sock == None:
             return
@@ -187,12 +198,16 @@ class Broadcast:
         sock.close()
         if recv:
             r = unpack(recv)
-            print('sendBlock: ', r)
+            
+            # print('sendBlock: ', r)
 
             # 如果接到別人確認過沒問題的 block 才可以加入 chain 上
             if r['error'] == 0:
                 self.s.node.add_new_block(new_block, False)
+                logging.info("Received response sendBlock > " + json.dumps(r))
                 # print("Add new block!")
+            else:
+                logging.error("Received response sendBlock > " + json.dumps(r))
     # 沒有用到此功能
     # def getBlocks(self, n, arg):
     #     # print(arg)
@@ -240,30 +255,29 @@ class Broadcast:
     def sendTransaction(self, n, arg):
         sock = create_sock(n.host, n.p2p_port)
         if sock == None:
+            logging.error("SOCK is None")
             return
 
-        sock.send(_pack({
+        req = {
             "method": "sendTransaction",
             "data": arg
-        }))
+        }
+
+        sock.send(_pack(req))
+
+        logging.info("Sent sendTransaction > " + json.dumps(req))
+
         recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
         sock.close()
         if recv:
-            print("sendTransaction: ", unpack(recv))
+            r = unpack(recv)
+            if r['error'] == 0:
+                logging.info("Received response sendTrasaction > " + json.dumps(r))
+            else:
+                logging.error("Received response sendTrasaction > " + json.dumps(r))
+            # print("sendTransaction: ", unpack(recv))
 
-    def sendtoaddress(self, n, arg):
-        sock = create_sock(n.host, n.p2p_port)
-        if sock == None:
-            return
-
-        sock.send(_pack({
-            "method": "sendtoaddress",
-            "data": arg
-        }))
-        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
-        sock.close()
-        if recv:
-            print("sendtoaddress: ", unpack(recv))
+    
 
     # n is a online neighbor
     def hello(self, n, arg):
@@ -333,6 +347,7 @@ class Response:
     #     sock.send(_pack(res))
 
     def sendBlock(self, sock, data, block_height):
+        logging.info("Received sendBlock > " + json.dumps(data))
         version =  data['version']
         prev_block = data['prev_block']
         transactions_hash = data['transactions_hash']
@@ -414,6 +429,7 @@ class Response:
         sock.send(_pack(res))
 
         if not error:
+            logging.info("Sent response sendBlock > " + json.dumps(res))
             if beneficiary not in balance:
                 balance[beneficiary] = 1000
             else:
@@ -421,6 +437,8 @@ class Response:
             new_block = Block(prev_block, transactions_hash, target, nonce, beneficiary, transactions, balance.copy())
            
             self.s.node.add_new_block(new_block, False)
+        else:
+            logging.error("Sent response sendBlock > " + json.dumps(res))
 
     # 沒有用到此功能
     # def getBlocks(self, sock, data):
@@ -489,7 +507,9 @@ class Response:
             error = 0
 
         res = {
-            'result': result,
+            'result': {
+                "height": height
+            },
             'error': error
         }
 
@@ -538,7 +558,8 @@ class Response:
         sock.send(_pack(res))
 
     def sendTransaction(self, sock, data):
-        t = Transaction(data['fee'], data['nonce'], data['sender_pub_key'], data['to'], data['value'], data['wallet'])
+        logging.info("Received sendTransaction > " + json.dumps(data))
+        t = Transaction(data['fee'], data['nonce'], data['sender_pub_key'], data['to'], data['value'], self.s.wallet)
         
         if t.verify_signature():
             error = 0
@@ -551,8 +572,13 @@ class Response:
         }
 
         sock.send(_pack(res))
+        if error == 0:
+            logging.info("Sent response sendTransaction > " + json.dumps(res))
+        else:
+            logging.error("Sent response sendTransaction > " + json.dumps(res))
 
     def getbalance(self, sock, data):
+        logging.info("Received getbalance > "+ json.dumps(data))
         chain = chain = self.s.node.get_chain()
         cur_height = self.s.node.get_height()  
         addr = data['address']
@@ -572,8 +598,10 @@ class Response:
         }
 
         sock.send(_pack(res))
+        logging.info("Sent response getbalance > " + json.dumps(res))
     
     def sendtoaddress(self, sock, data):
+        logging.info("Received sendtoaddress > " + json.dumps(data))
         fee = self.s.node.wallet.fee
         cur_height = self.s.node.get_height()
         chain = self.s.node.get_chain()
@@ -597,11 +625,12 @@ class Response:
         arg = t.get_transaction()
 
         # TODO: 檢查餘額
-        print(chain[cur_height].block_header.balance)
+        # print(chain[cur_height].block_header.balance)
         if t.fee + t.value <= chain[cur_height].block_header.balance[self.s.node.wallet.pub_key]:
             self.s.node.trans_pool['waiting'].append(t)
         else:
             self.s.node.trans_pool['invalid'].append(t)
+        
         self.s.broadcast(self.s.apib.sendTransaction, arg)
         
         # 先寫死
@@ -610,7 +639,10 @@ class Response:
         res = {
             "error": error
         }
+
+        # print(res)
         sock.send(_pack(res))
+        logging.info("Sent response sendtoaddress > " + json.dumps(res))
 
     def echo(self, sock, data):
         print('echo')
@@ -699,17 +731,50 @@ class SendTo:
             print(unpack(recv))
 
     def getbalance(self, n, arg):
+        
         sock = create_sock(n.host, n.user_port)
         if sock == None:
             return
         address = arg['address']
-        sock.send(_pack({
+        req = {
             'method': 'getbalance',
             'data': {
                 'address': address
             }
-        }))
+        }
+        sock.send(_pack(req))
+
+        logging.info("Sent getbalance > " + json.dumps(req))
         recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
         sock.close()
         if recv:
-            print('getbalance: ', unpack(recv))
+            r = unpack(recv)
+            if r['error'] == 0:
+                logging.info("Received response getbalance > " + json.dumps(r))
+            else:
+                logging.error("Sent getbalance > " + json.dumps(req))
+            
+            # print('getbalance: ', unpack(recv))
+
+    def sendtoaddress(self, n, arg):
+        sock = create_sock(n.host, n.p2p_port)
+        if sock == None:
+            return
+
+        req = {
+            "method": "sendtoaddress",
+            "data": arg
+        }
+
+        sock.send(_pack(req))
+
+        logging.info("Sent sendtoaddress > " + json.dumps(req))
+        recv = sock.recv(globs.DEFAULT_SOCK_BUFFER_SIZE)
+        sock.close()
+        if recv:
+            r = unpack(recv)
+            if r['error'] == 1:
+                logging.error("Received response sendtoaddress > " + json.dumps(r))
+            else:
+                logging.info("Received response sendtoaddress > " + json.dumps(r))
+            # print("sendtoaddress: ", unpack(recv))

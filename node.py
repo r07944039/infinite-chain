@@ -2,9 +2,18 @@
 import hashlib
 import threading
 import os
+import logging
+
 from block.block import Block
 from api import header_to_items
 
+
+
+logging.basicConfig(level=logging.INFO,
+            format='[+]%(levelname)-8s %(message)s')
+# 定義 handler 輸出 sys.stderr
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
 
 def sha256(data):
     m = hashlib.sha256()
@@ -101,7 +110,7 @@ class Node():
         self.lock.acquire()
         with open(self.file_name, 'w+') as f:
             # Erase the content 
-            print("ERASE THE CONTENT")
+            logging.warning("ERASE THE CONTENT")
             f.seek(0)
             f.truncate()
             # Write all blocks into the file
