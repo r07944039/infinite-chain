@@ -555,7 +555,7 @@ class Response:
 
     def sendTransaction(self, sock, data):
         logging.info("Received sendTransaction > " + json.dumps(data))
-        t = Transaction(data['fee'], data['nonce'], data['sender_pub_key'], data['to'], data['value'], self.s.wallet)
+        t = Transaction(data['fee'], data['nonce'], data['sender_pub_key'], data['to'], data['value'], self.s.node.wallet)
         
         if t.verify_signature():
             error = 0
