@@ -373,25 +373,26 @@ class Response:
             balance = chain[-1].block_header.balance
 
             for tx in transactions:
-                if tx.sender_pub_key not in balance:
-                    balance[tx.sender_pub_key] = 0
-                if tx.to not in balance:
-                    balance[tx.to] = 0
-                if not verify_signature(tx.sender_pub_key, tx.signature, tx.msg):
+                t = Transaction(tx['fee'], tx['nonce'], tx['sender_pub_key'], tx['to'], tx['value'], self.s.node.wallet)
+                if t.sender_pub_key not in balance:
+                    balance[t.sender_pub_key] = 0
+                if t.to not in balance:
+                    balance[t.to] = 0
+                if not t.verify_signature():
                     print("sig")
                     error = 1
                     break
-                if not verify_not_exist_signature(self.s.node.trans_sig_list, tx.signature):
+                if not verify_not_exist_signature(self.s.node.trans_sig_list, t.signature):
                     print("exist")
                     error = 1
                     break
-                if not verify_balance(balance[tx.sender_pub_key], tx.fee, tx.value):
+                if not verify_balance(balance[t.sender_pub_key], t.fee, t.value):
                     print("balance")
                     error = 1
                     break
                 
-                balance[tx.sender_pub_key] -= tx.fee + tx.value
-                balance[tx.to] += tx.value
+                balance[t.sender_pub_key] -= t.fee + t.value
+                balance[t.to] += t.value
 
             # 這個不需要，因為我們靠sendblock的先挖先贏，就能強勢同步其他node
             # if need_getBlocks:

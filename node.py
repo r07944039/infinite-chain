@@ -45,7 +45,7 @@ class Node():
         
         # 把 invalid list 的再檢查一次，看能不能移到 waiting 裡面
         for tran in self.trans_pool['invalid']:
-            if tran.value + self.wallet.fee <= block.block_header.balance:
+            if tran.value + self.wallet.fee <= block.block_header.balance[self.wallet.pub_key]:
                 self.trans_pool['waiting'].append(tran)
                 self.trans_pool['invalid'].remove(tran)
         
