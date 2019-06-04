@@ -64,7 +64,7 @@ class Miner:
                 balance[tx.to] += tx.value
                 save_trans.append(tx.get_transaction())
         
-        if beneficiary not in balance:
+        if header.beneficiary not in balance:
             balance[beneficiary] = 1000
         else:
             balance[beneficiary] += 1000

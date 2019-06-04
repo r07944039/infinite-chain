@@ -1,4 +1,4 @@
-# Blockchain HW2
+# Infinite Chain
 
 ## Quick Start
 ```
